@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="BugBountyTrainer.vcxproj" />
+  <Project Path="BugBountyTrainer.vcxproj" Id="f9fe9e43-d160-4d74-a7a6-db4bc7f4cda2" />
 </Solution>
