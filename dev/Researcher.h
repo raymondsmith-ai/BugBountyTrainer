@@ -11,11 +11,14 @@ private:
 
 public:
     // Constructor
-    Researcher(std::string researcherName);
+    Researcher(const std::string& researcherName);
 
-    // Displays the researcher's information
+    // Getters
+    std::string GetName() const;
+    int GetLevel() const;
+    int GetXP() const;
+
+    // Researcher functions
     void DisplayProfile() const;
-
-    // Adds XP to the researcher
     void AddXP(int amount);
 };
