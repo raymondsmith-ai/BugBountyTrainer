@@ -1,5 +1,4 @@
-#in#include "Researcher.h"
-
+#include "../include/Researcher.h"
 #include <iostream>
 
 // Constructor

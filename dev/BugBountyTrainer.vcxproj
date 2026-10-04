@@ -139,9 +139,13 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BugBountyTrainer.cpp" />
-    <ClCompile Include="Researcher.cpp" />
-    <ClCompile Include="Researcher.h" />
+    <ClCompile Include="src\BugBountyTrainer.cpp" />
+    <ClCompile Include="src\Challenge.cpp" />
+    <ClCompile Include="src\Researcher.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Challenge.h" />
+    <ClInclude Include="Reasercher.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
