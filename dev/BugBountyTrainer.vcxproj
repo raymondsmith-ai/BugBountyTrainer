@@ -142,10 +142,12 @@
     <ClCompile Include="src\BugBountyTrainer.cpp" />
     <ClCompile Include="src\Challenge.cpp" />
     <ClCompile Include="src\Researcher.cpp" />
+    <ClCompile Include="src\TrainerApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h" />
     <ClInclude Include="Reasercher.h" />
+    <ClInclude Include="TrainerApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
