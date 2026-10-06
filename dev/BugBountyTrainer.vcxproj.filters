@@ -29,13 +29,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Reasercher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Challenge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TrainerApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Reasearcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

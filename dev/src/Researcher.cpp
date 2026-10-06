@@ -1,4 +1,5 @@
 #include "../include/Researcher.h"
+
 #include <iostream>
 
 // Constructor
@@ -42,12 +43,19 @@ void Researcher::DisplayProfile() const
     std::cout << "====================================\n";
 }
 
-// Adds XP to the researcher.
-// Level progression will be added during Week 2.
+// Adds XP and updates the researcher's level.
 void Researcher::AddXP(int amount)
 {
-    if (amount > 0)
+    if (amount <= 0)
     {
-        xp += amount;
+        return;
+    }
+
+    xp += amount;
+
+    // The researcher earns a new level every 200 XP.
+    while (xp >= level * 200)
+    {
+        level++;
     }
 }

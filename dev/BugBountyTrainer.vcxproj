@@ -146,7 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h" />
-    <ClInclude Include="Reasercher.h" />
+    <ClInclude Include="Reasearcher.h" />
     <ClInclude Include="TrainerApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
