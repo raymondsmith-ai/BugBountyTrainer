@@ -6,6 +6,7 @@
 Challenge::Challenge(
     const std::string& challengeTitle,
     const std::string& challengeDescription,
+    const std::string& challengeCategory,
     const std::string& challengeDifficulty,
     int reward,
     const std::string& challengeQuestion,
@@ -14,6 +15,7 @@ Challenge::Challenge(
 {
     title = challengeTitle;
     description = challengeDescription;
+    category = challengeCategory;
     difficulty = challengeDifficulty;
 
     xpReward = reward;
@@ -24,43 +26,49 @@ Challenge::Challenge(
     correctAnswer = answer;
 }
 
-// Returns the challenge title
+// Returns the challenge title.
 std::string Challenge::GetTitle() const
 {
     return title;
 }
 
-// Returns the challenge description
+// Returns the challenge description.
 std::string Challenge::GetDescription() const
 {
     return description;
 }
 
-// Returns the difficulty
+// Returns the challenge category.
+std::string Challenge::GetCategory() const
+{
+    return category;
+}
+
+// Returns the difficulty.
 std::string Challenge::GetDifficulty() const
 {
     return difficulty;
 }
 
-// Returns the XP reward
+// Returns the XP reward.
 int Challenge::GetXPReward() const
 {
     return xpReward;
 }
 
-// Returns the number of answer choices
+// Returns the number of answer choices.
 int Challenge::GetOptionCount() const
 {
     return static_cast<int>(answerOptions.size());
 }
 
-// Returns whether the challenge has been completed
+// Returns whether the challenge has been completed.
 bool Challenge::IsCompleted() const
 {
     return completed;
 }
 
-// Displays general challenge information
+// Displays general challenge information.
 void Challenge::DisplayChallenge() const
 {
     std::cout << "\n====================================\n";
@@ -68,6 +76,7 @@ void Challenge::DisplayChallenge() const
     std::cout << "====================================\n";
 
     std::cout << "Title:       " << title << std::endl;
+    std::cout << "Category:    " << category << std::endl;
     std::cout << "Difficulty:  " << difficulty << std::endl;
     std::cout << "XP Reward:   " << xpReward << std::endl;
     std::cout << "Description: " << description << std::endl;
@@ -84,7 +93,7 @@ void Challenge::DisplayChallenge() const
     std::cout << "====================================\n";
 }
 
-// Displays the question and answer choices
+// Displays the question and answer choices.
 void Challenge::DisplayQuestion() const
 {
     std::cout << "\nQuestion:\n";
@@ -98,13 +107,13 @@ void Challenge::DisplayQuestion() const
     }
 }
 
-// Checks the user's answer
+// Checks the user's answer.
 bool Challenge::IsCorrectAnswer(int answer) const
 {
     return answer == correctAnswer;
 }
 
-// Marks the challenge as completed
+// Marks the challenge as completed.
 void Challenge::CompleteChallenge()
 {
     completed = true;

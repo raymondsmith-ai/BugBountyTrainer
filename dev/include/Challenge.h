@@ -8,6 +8,7 @@ class Challenge
 private:
     std::string title;
     std::string description;
+    std::string category;
     std::string difficulty;
 
     int xpReward;
@@ -22,6 +23,7 @@ public:
     Challenge(
         const std::string& challengeTitle,
         const std::string& challengeDescription,
+        const std::string& challengeCategory,
         const std::string& challengeDifficulty,
         int reward,
         const std::string& challengeQuestion,
@@ -31,6 +33,7 @@ public:
     // Getters
     std::string GetTitle() const;
     std::string GetDescription() const;
+    std::string GetCategory() const;
     std::string GetDifficulty() const;
 
     int GetXPReward() const;

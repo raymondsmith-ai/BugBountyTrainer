@@ -13,6 +13,7 @@ TrainerApp::TrainerApp(const std::string& researcherName)
         Challenge(
             "Authorization Basics",
             "Learn why permission is required before security testing.",
+            "Authorization",
             "Easy",
             100,
             "Before testing a website for vulnerabilities, what should you verify first?",
@@ -30,6 +31,7 @@ TrainerApp::TrainerApp(const std::string& researcherName)
         Challenge(
             "Scope Basics",
             "Learn why bug bounty scope must be followed.",
+            "Rules & Ethics",
             "Easy",
             150,
             "What should you do if a website or domain is not listed as an authorized target?",
@@ -47,6 +49,7 @@ TrainerApp::TrainerApp(const std::string& researcherName)
         Challenge(
             "Input Validation Basics",
             "Learn why applications should validate user input.",
+            "Input Validation",
             "Medium",
             200,
             "Why is input validation important?",
@@ -74,7 +77,7 @@ void TrainerApp::DisplayMenu() const
     std::cout << "Enter a number from 1 to 4: ";
 }
 
-// Gets a valid integer choice from the user.
+// Gets a valid integer from the user.
 int TrainerApp::GetValidatedChoice(
     int minimum,
     int maximum) const
@@ -85,7 +88,7 @@ int TrainerApp::GetValidatedChoice(
     {
         std::cin >> choice;
 
-        // Check for letters or other invalid input.
+        // Handles letters or invalid input.
         if (std::cin.fail())
         {
             std::cin.clear();
@@ -104,12 +107,12 @@ int TrainerApp::GetValidatedChoice(
             continue;
         }
 
-        // Remove anything remaining on the input line.
+        // Clear anything remaining on the line.
         std::cin.ignore(
             std::numeric_limits<std::streamsize>::max(),
             '\n');
 
-        // Check whether the number is inside the valid range.
+        // Check the valid number range.
         if (choice < minimum || choice > maximum)
         {
             std::cout << "\nInvalid selection.\n";
@@ -133,10 +136,16 @@ void TrainerApp::DisplayChallenges() const
     std::cout << "       TRAINING CHALLENGES\n";
     std::cout << "====================================\n";
 
-    for (int i = 0; i < static_cast<int>(challenges.size()); i++)
+    for (int i = 0;
+        i < static_cast<int>(challenges.size());
+        i++)
     {
         std::cout << i + 1 << ". "
             << challenges[i].GetTitle()
+            << std::endl;
+
+        std::cout << "   Category: "
+            << challenges[i].GetCategory()
             << std::endl;
 
         std::cout << "   Difficulty: "
@@ -170,7 +179,9 @@ void TrainerApp::StartTraining()
     std::cout << "          START TRAINING\n";
     std::cout << "====================================\n";
 
-    for (int i = 0; i < static_cast<int>(challenges.size()); i++)
+    for (int i = 0;
+        i < static_cast<int>(challenges.size());
+        i++)
     {
         std::cout << i + 1 << ". "
             << challenges[i].GetTitle()
@@ -195,30 +206,25 @@ void TrainerApp::StartTraining()
         0,
         static_cast<int>(challenges.size()));
 
-    // Return to the main menu.
     if (choice == 0)
     {
         return;
     }
 
-    /*
-        Pointer to the selected Challenge object.
-
-        We are NOT using new here.
-        The pointer simply points to an existing object
-        stored inside the challenges vector.
-    */
     Challenge* selectedChallenge =
         &challenges[choice - 1];
 
-    // Use -> because selectedChallenge is a pointer.
     selectedChallenge->DisplayChallenge();
 
-    // Do not award XP twice.
+    // Prevent duplicate XP.
     if (selectedChallenge->IsCompleted())
     {
-        std::cout << "\nYou already completed this challenge.\n";
-        std::cout << "Choose another challenge to continue training.\n";
+        std::cout
+            << "\nYou already completed this challenge.\n";
+
+        std::cout
+            << "Choose another challenge to continue training.\n";
+
         return;
     }
 
@@ -230,7 +236,7 @@ void TrainerApp::StartTraining()
         1,
         selectedChallenge->GetOptionCount());
 
-    // Correct answer
+    // Correct answer.
     if (selectedChallenge->IsCorrectAnswer(answer))
     {
         int oldLevel = researcher.GetLevel();
@@ -245,6 +251,7 @@ void TrainerApp::StartTraining()
         std::cout << "====================================\n";
 
         std::cout << "Correct!\n";
+
         std::cout << "You earned "
             << selectedChallenge->GetXPReward()
             << " XP.\n";
@@ -253,10 +260,10 @@ void TrainerApp::StartTraining()
             << researcher.GetXP()
             << std::endl;
 
-        // Tell the user if they leveled up.
         if (researcher.GetLevel() > oldLevel)
         {
             std::cout << "\nLEVEL UP!\n";
+
             std::cout << "You are now Level "
                 << researcher.GetLevel()
                 << "!\n";
@@ -274,7 +281,7 @@ void TrainerApp::StartTraining()
     }
 }
 
-// Handles the user's main menu selection.
+// Handles main menu choices.
 void TrainerApp::HandleChoice(int choice)
 {
     switch (choice)
@@ -294,16 +301,22 @@ void TrainerApp::HandleChoice(int choice)
     case 4:
         running = false;
 
-        std::cout << "\nThank you for using Bug Bounty Trainer!\n";
-        std::cout << "Keep learning and test responsibly.\n";
+        std::cout
+            << "\nThank you for using Bug Bounty Trainer!\n";
+
+        std::cout
+            << "Keep learning and test responsibly.\n";
+
         break;
     }
 }
 
-// Pauses before returning to the main menu.
+// Pauses the application.
 void TrainerApp::Pause() const
 {
-    std::cout << "\nPress Enter to return to the main menu...";
+    std::cout
+        << "\nPress Enter to return to the main menu...";
+
     std::cin.get();
 }
 
