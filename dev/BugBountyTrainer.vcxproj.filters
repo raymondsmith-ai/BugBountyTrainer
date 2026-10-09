@@ -27,6 +27,9 @@
     <ClCompile Include="src\TrainerApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\LearningModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h">
@@ -35,7 +38,10 @@
     <ClInclude Include="TrainerApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Reasearcher.h">
+    <ClInclude Include="LearningModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Researcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
