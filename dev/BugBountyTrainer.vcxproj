@@ -141,15 +141,17 @@
   <ItemGroup>
     <ClCompile Include="src\BugBountyTrainer.cpp" />
     <ClCompile Include="src\Challenge.cpp" />
+    <ClCompile Include="src\Lab.cpp" />
     <ClCompile Include="src\LearningModule.cpp" />
     <ClCompile Include="src\Researcher.cpp" />
     <ClCompile Include="src\TrainerApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h" />
+    <ClInclude Include="include\Lab.h" />
     <ClInclude Include="include\Researcher.h" />
     <ClInclude Include="LearningModule.h" />
-    <ClInclude Include="TrainerApp.h" />
+    <ClInclude Include="include\TrainerApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
