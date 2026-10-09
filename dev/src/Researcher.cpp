@@ -2,13 +2,16 @@
 
 #include <iostream>
 
-// Constructor
+// Constructor.
 // Every new researcher starts at Level 1 with 0 XP.
 Researcher::Researcher(const std::string& researcherName)
 {
     name = researcherName;
+
     level = 1;
-    xp = 0;
+
+    totalXP = 0;
+    availableXP = 0;
 }
 
 // Returns the researcher's name.
@@ -23,10 +26,23 @@ int Researcher::GetLevel() const
     return level;
 }
 
-// Returns the researcher's current XP.
+// Kept for compatibility with existing code.
+// Returns lifetime XP.
 int Researcher::GetXP() const
 {
-    return xp;
+    return totalXP;
+}
+
+// Returns lifetime XP.
+int Researcher::GetTotalXP() const
+{
+    return totalXP;
+}
+
+// Returns XP currently available to spend.
+int Researcher::GetAvailableXP() const
+{
+    return availableXP;
 }
 
 // Displays the researcher's profile.
@@ -36,14 +52,26 @@ void Researcher::DisplayProfile() const
     std::cout << "        RESEARCHER PROFILE\n";
     std::cout << "====================================\n";
 
-    std::cout << "Name:  " << name << std::endl;
-    std::cout << "Level: " << level << std::endl;
-    std::cout << "XP:    " << xp << std::endl;
+    std::cout << "Name:         "
+        << name
+        << std::endl;
+
+    std::cout << "Level:        "
+        << level
+        << std::endl;
+
+    std::cout << "Total XP:     "
+        << totalXP
+        << std::endl;
+
+    std::cout << "Available XP: "
+        << availableXP
+        << std::endl;
 
     std::cout << "====================================\n";
 }
 
-// Adds XP and updates the researcher's level.
+// Adds XP to both lifetime XP and spendable XP.
 void Researcher::AddXP(int amount)
 {
     if (amount <= 0)
@@ -51,11 +79,31 @@ void Researcher::AddXP(int amount)
         return;
     }
 
-    xp += amount;
+    totalXP += amount;
+    availableXP += amount;
 
-    // The researcher earns a new level every 200 XP.
-    while (xp >= level * 200)
+    // Gain a new level every 200 lifetime XP.
+    while (totalXP >= level * 200)
     {
         level++;
     }
+}
+
+// Attempts to spend XP.
+// Returns true if the researcher has enough XP.
+bool Researcher::SpendXP(int amount)
+{
+    if (amount < 0)
+    {
+        return false;
+    }
+
+    if (availableXP < amount)
+    {
+        return false;
+    }
+
+    availableXP -= amount;
+
+    return true;
 }

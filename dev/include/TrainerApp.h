@@ -5,26 +5,34 @@
 
 #include "Researcher.h"
 #include "Challenge.h"
+#include "LearningModule.h"
 
 class TrainerApp
 {
 private:
     Researcher researcher;
 
-    // Stores all training challenges
+    // Stores all training challenges.
     std::vector<Challenge> challenges;
+
+    // Stores learning modules in order from beginner to advanced.
+    std::vector<LearningModule> learningModules;
 
     bool running;
 
-    // Menu functions
+    // Main menu functions.
     void DisplayMenu() const;
     void HandleChoice(int choice);
 
-    // Training functions
+    // Learning path functions.
+    void DisplayLearningPath() const;
+    void OpenLearningPath();
+
+    // Training functions.
     void DisplayChallenges() const;
     void StartTraining();
 
-    // Usability functions
+    // Usability functions.
     int GetValidatedChoice(int minimum, int maximum) const;
     void Pause() const;
 
