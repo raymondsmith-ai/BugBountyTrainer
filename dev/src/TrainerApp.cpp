@@ -476,6 +476,47 @@ void TrainerApp::OpenLearningPath()
                 selectedModule->GetUnlockCost()))
             {
                 selectedModule->UnlockModule();
+                // ====================================
+// Check for Previously Completed Lab
+// ====================================
+
+// Computer Fundamentals requires the
+// Terminal Investigation hands-on lab.
+//
+// If the lab was completed before the
+// module was unlocked, complete the
+// module now.
+                if (moduleIndex == 1 &&
+                    labs[0].IsCompleted() &&
+                    !selectedModule->IsCompleted())
+                {
+                    selectedModule->CompleteModule();
+
+                    if (selectedModule->IsCompleted())
+                    {
+                        researcher.AddXP(
+                            selectedModule->GetXPReward());
+
+                        std::cout << "\n====================================\n";
+                        std::cout << "       LEARNING MODULE COMPLETE!\n";
+                        std::cout << "====================================\n";
+
+                        std::cout
+                            << selectedModule->GetTitle()
+                            << " completed successfully!\n";
+
+                        std::cout << "\nModule XP Bonus: "
+                            << selectedModule->GetXPReward()
+                            << " XP\n";
+
+                        std::cout
+                            << "\nYour previously completed "
+                            << "Terminal Investigation lab "
+                            << "satisfied the module requirement.\n";
+
+                        std::cout << "====================================\n";
+                    }
+                }
 
                 std::cout << "\n====================================\n";
                 std::cout << "          MODULE UNLOCKED!\n";
@@ -554,17 +595,39 @@ void TrainerApp::OpenLearningPath()
             std::cout
                 << "You will also earn the module XP bonus.\n";
         }
+        else if (moduleIndex == 1)
+        {
+            std::cout
+                << "Required Hands-On Lab:\n\n";
+
+            std::cout << "1. Terminal Investigation: ";
+
+            if (labs[0].IsCompleted())
+            {
+                std::cout << "Completed\n";
+            }
+            else
+            {
+                std::cout << "Not Completed\n";
+            }
+
+            std::cout
+                << "\nComplete Terminal Investigation from "
+                << "Hands-On Labs to automatically complete "
+                << "Computer Fundamentals.\n";
+
+            std::cout
+                << "You will also earn the module XP bonus.\n";
+        }
         else
         {
             std::cout
                 << "Required training activities for this module "
                 << "are still being developed.\n";
         }
-
         Pause();
     }
-}
-
+    }
 // ====================================
 // Display Hands-On Labs
 // ====================================
@@ -868,6 +931,44 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
             {
                 // Award the lab's XP once.
                 researcher.AddXP(lab.GetXPReward());
+                
+        // ====================================
+        // Connect Lab to Learning Module
+        // ====================================
+
+                     // Terminal Investigation is the required
+                     // hands-on lab for Computer Fundamentals.
+                if (lab.GetTitle() == "Terminal Investigation" &&
+                    learningModules[1].IsUnlocked() &&
+                    !learningModules[1].IsCompleted())
+                {
+                    learningModules[1].CompleteModule();
+
+                    // Award the module XP bonus once.
+                    if (learningModules[1].IsCompleted())
+                    {
+                        researcher.AddXP(
+                            learningModules[1].GetXPReward());
+
+                        std::cout << "\n====================================\n";
+                        std::cout << "       LEARNING MODULE COMPLETE!\n";
+                        std::cout << "====================================\n";
+
+                        std::cout
+                            << learningModules[1].GetTitle()
+                            << " completed successfully!\n";
+
+                        std::cout << "\nModule XP Bonus: "
+                            << learningModules[1].GetXPReward()
+                            << " XP\n";
+
+                        std::cout
+                            << "\nTerminal Investigation satisfied "
+                            << "the required hands-on training.\n";
+
+                        std::cout << "====================================\n";
+                    }
+                }
 
                 std::cout << "\n====================================\n";
                 std::cout << "            LAB COMPLETE!\n";
