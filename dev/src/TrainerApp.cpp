@@ -7,10 +7,8 @@
 // Constructor
 // ====================================
 
-TrainerApp::TrainerApp(
-    const std::string& researcherName)
-    : researcher(researcherName),
-    running(true)
+TrainerApp::TrainerApp(const std::string& researcherName)
+    : researcher(researcherName), running(true)
 {
     // ====================================
     // Training Challenges
@@ -68,7 +66,7 @@ TrainerApp::TrainerApp(
     );
 
     // ====================================
-    // Learning Path
+    // Learning Modules
     // ====================================
 
     learningModules.push_back(
@@ -187,21 +185,14 @@ TrainerApp::TrainerApp(
         true
     );
 
-    terminalLab.AddObjective(
-        "Identify the current user.");
-
-    terminalLab.AddObjective(
-        "List the files in the training directory.");
-
-    terminalLab.AddObjective(
-        "Read the training.txt file.");
-
-    terminalLab.AddObjective(
-        "Recover the validation code.");
+    terminalLab.AddObjective("Identify the current user.");
+    terminalLab.AddObjective("List the files in the training directory.");
+    terminalLab.AddObjective("Read the training.txt file.");
+    terminalLab.AddObjective("Recover the validation code.");
 
     labs.push_back(terminalLab);
 
-    // Future lab.
+    // Future training lab.
     Lab networkLab(
         "Network Discovery",
         "Practice identifying services inside an isolated training network.",
@@ -210,14 +201,9 @@ TrainerApp::TrainerApp(
         false
     );
 
-    networkLab.AddObjective(
-        "Identify the training target.");
-
-    networkLab.AddObjective(
-        "Discover the exposed service.");
-
-    networkLab.AddObjective(
-        "Identify the service type.");
+    networkLab.AddObjective("Identify the training target.");
+    networkLab.AddObjective("Discover the exposed service.");
+    networkLab.AddObjective("Identify the service type.");
 
     labs.push_back(networkLab);
 }
@@ -232,25 +218,17 @@ void TrainerApp::DisplayMenu() const
     std::cout << "        BUG BOUNTY TRAINER\n";
     std::cout << "====================================\n";
 
-    std::cout
-        << "Researcher: "
-        << researcher.GetName()
-        << std::endl;
+    std::cout << "Researcher: "
+        << researcher.GetName() << std::endl;
 
-    std::cout
-        << "Level: "
-        << researcher.GetLevel()
-        << std::endl;
+    std::cout << "Level: "
+        << researcher.GetLevel() << std::endl;
 
-    std::cout
-        << "Total XP: "
-        << researcher.GetTotalXP()
-        << std::endl;
+    std::cout << "Total XP: "
+        << researcher.GetTotalXP() << std::endl;
 
-    std::cout
-        << "Available XP: "
-        << researcher.GetAvailableXP()
-        << std::endl;
+    std::cout << "Available XP: "
+        << researcher.GetAvailableXP() << std::endl;
 
     std::cout << "====================================\n";
 
@@ -269,9 +247,7 @@ void TrainerApp::DisplayMenu() const
 // Input Validation
 // ====================================
 
-int TrainerApp::GetValidatedChoice(
-    int minimum,
-    int maximum) const
+int TrainerApp::GetValidatedChoice(int minimum, int maximum) const
 {
     int choice;
 
@@ -288,42 +264,29 @@ int TrainerApp::GetValidatedChoice(
                 '\n');
 
             std::cout << "\nInvalid input.\n";
-
-            std::cout
-                << "Please enter a number from "
-                << minimum
-                << " to "
-                << maximum
-                << ": ";
-
-            continue;
         }
-
-        std::cin.ignore(
-            std::numeric_limits<std::streamsize>::max(),
-            '\n');
-
-        if (choice < minimum ||
-            choice > maximum)
+        else
         {
+            std::cin.ignore(
+                std::numeric_limits<std::streamsize>::max(),
+                '\n');
+
+            if (choice >= minimum && choice <= maximum)
+            {
+                return choice;
+            }
+
             std::cout << "\nInvalid selection.\n";
-
-            std::cout
-                << "Please enter a number from "
-                << minimum
-                << " to "
-                << maximum
-                << ": ";
-
-            continue;
         }
 
-        return choice;
+        std::cout << "Please enter a number from "
+            << minimum << " to "
+            << maximum << ": ";
     }
 }
 
 // ====================================
-// Learning Path Display
+// Display Learning Path
 // ====================================
 
 void TrainerApp::DisplayLearningPath() const
@@ -332,26 +295,19 @@ void TrainerApp::DisplayLearningPath() const
     std::cout << "           LEARNING PATH\n";
     std::cout << "====================================\n";
 
-    std::cout
-        << "Researcher Level: "
-        << researcher.GetLevel()
-        << std::endl;
+    std::cout << "Researcher Level: "
+        << researcher.GetLevel() << std::endl;
 
-    std::cout
-        << "Total XP: "
-        << researcher.GetTotalXP()
-        << std::endl;
+    std::cout << "Total XP: "
+        << researcher.GetTotalXP() << std::endl;
 
-    std::cout
-        << "Available XP: "
-        << researcher.GetAvailableXP()
-        << std::endl;
+    std::cout << "Available XP: "
+        << researcher.GetAvailableXP() << std::endl;
 
     std::cout << "====================================\n\n";
 
     for (int i = 0;
-        i < static_cast<int>(
-            learningModules.size());
+        i < static_cast<int>(learningModules.size());
         i++)
     {
         std::cout << i + 1 << ". ";
@@ -369,32 +325,25 @@ void TrainerApp::DisplayLearningPath() const
             std::cout << "[LOCKED] ";
         }
 
-        std::cout
-            << "Level "
+        std::cout << "Level "
             << learningModules[i].GetModuleLevel()
             << " - "
             << learningModules[i].GetTitle()
             << std::endl;
 
-        std::cout
-            << "   Difficulty: "
+        std::cout << "   Difficulty: "
             << learningModules[i].GetDifficulty()
             << std::endl;
 
-        std::cout
-            << "   XP Reward: "
+        std::cout << "   XP Reward: "
             << learningModules[i].GetXPReward()
-            << " XP"
-            << std::endl;
+            << " XP\n";
 
-        std::cout
-            << "   Unlock Cost: "
+        std::cout << "   Unlock Cost: "
             << learningModules[i].GetUnlockCost()
-            << " XP"
-            << std::endl;
+            << " XP\n";
 
-        std::cout
-            << "   Required Level: "
+        std::cout << "   Required Level: "
             << learningModules[i].GetRequiredLevel()
             << std::endl;
 
@@ -406,7 +355,7 @@ void TrainerApp::DisplayLearningPath() const
 }
 
 // ====================================
-// Learning Path
+// Open Learning Path
 // ====================================
 
 void TrainerApp::OpenLearningPath()
@@ -421,8 +370,7 @@ void TrainerApp::OpenLearningPath()
 
         int choice = GetValidatedChoice(
             0,
-            static_cast<int>(
-                learningModules.size()));
+            static_cast<int>(learningModules.size()));
 
         if (choice == 0)
         {
@@ -430,8 +378,7 @@ void TrainerApp::OpenLearningPath()
             continue;
         }
 
-        int moduleIndex =
-            choice - 1;
+        int moduleIndex = choice - 1;
 
         LearningModule* selectedModule =
             &learningModules[moduleIndex];
@@ -446,33 +393,28 @@ void TrainerApp::OpenLearningPath()
             std::cout << "           MODULE LOCKED\n";
             std::cout << "====================================\n";
 
-            std::cout
-                << "Module: "
+            std::cout << "Module: "
                 << selectedModule->GetTitle()
                 << std::endl;
 
-            std::cout
-                << "Required Level: "
+            std::cout << "Required Level: "
                 << selectedModule->GetRequiredLevel()
                 << std::endl;
 
-            std::cout
-                << "Unlock Cost: "
+            std::cout << "Unlock Cost: "
                 << selectedModule->GetUnlockCost()
-                << " XP"
-                << std::endl;
+                << " XP\n";
 
-            std::cout
-                << "Available XP: "
+            std::cout << "Available XP: "
                 << researcher.GetAvailableXP()
                 << std::endl;
 
-            // Previous module must be complete.
+            // Check whether the previous module
+            // has been completed.
             if (moduleIndex > 0)
             {
                 LearningModule* previousModule =
-                    &learningModules[
-                        moduleIndex - 1];
+                    &learningModules[moduleIndex - 1];
 
                 if (!previousModule->IsCompleted())
                 {
@@ -480,56 +422,50 @@ void TrainerApp::OpenLearningPath()
                     std::cout << "      PREREQUISITE NOT MET\n";
                     std::cout << "====================================\n";
 
-                    std::cout
-                        << "You must complete:\n";
+                    std::cout << "You must complete:\n";
 
-                    std::cout
-                        << "Level "
+                    std::cout << "Level "
                         << previousModule->GetModuleLevel()
                         << " - "
                         << previousModule->GetTitle()
                         << std::endl;
 
                     Pause();
-
                     continue;
                 }
             }
 
-            // Researcher level check.
+            // Check researcher level.
             if (researcher.GetLevel() <
                 selectedModule->GetRequiredLevel())
             {
                 std::cout << "\nYour researcher level is too low.\n";
 
-                std::cout
-                    << "Required Level: "
+                std::cout << "Required Level: "
                     << selectedModule->GetRequiredLevel()
                     << std::endl;
 
                 Pause();
-
                 continue;
             }
 
-            // XP check.
+            // Check available XP.
             if (researcher.GetAvailableXP() <
                 selectedModule->GetUnlockCost())
             {
                 std::cout << "\nNot enough available XP.\n";
 
                 Pause();
-
                 continue;
             }
 
+            // Allow the researcher to purchase the module.
             std::cout << "\nPrerequisites completed.\n\n";
             std::cout << "1. Purchase Module\n";
             std::cout << "2. Cancel\n";
             std::cout << "Choice: ";
 
-            int purchaseChoice =
-                GetValidatedChoice(1, 2);
+            int purchaseChoice = GetValidatedChoice(1, 2);
 
             if (purchaseChoice == 2)
             {
@@ -545,12 +481,10 @@ void TrainerApp::OpenLearningPath()
                 std::cout << "          MODULE UNLOCKED!\n";
                 std::cout << "====================================\n";
 
-                std::cout
-                    << selectedModule->GetTitle()
+                std::cout << selectedModule->GetTitle()
                     << " is now available.\n";
 
-                std::cout
-                    << "Available XP: "
+                std::cout << "Available XP: "
                     << researcher.GetAvailableXP()
                     << std::endl;
 
@@ -561,7 +495,7 @@ void TrainerApp::OpenLearningPath()
         }
 
         // ====================================
-        // Completed Module
+        // Already Completed Module
         // ====================================
 
         if (selectedModule->IsCompleted())
@@ -572,12 +506,11 @@ void TrainerApp::OpenLearningPath()
                 << "\nThis module has already been completed.\n";
 
             Pause();
-
             continue;
         }
 
         // ====================================
-        // Temporary Module Screen
+        // Module Training
         // ====================================
 
         selectedModule->DisplayModule();
@@ -586,20 +519,54 @@ void TrainerApp::OpenLearningPath()
         std::cout << "           MODULE TRAINING\n";
         std::cout << "====================================\n";
 
-        std::cout
-            << "Module completion will soon require "
-            << "its assigned hands-on lab.\n\n";
+        // Level 0 requires two challenges.
+        if (moduleIndex == 0)
+        {
+            std::cout
+                << "Complete both challenges from Start Training:\n\n";
 
-        std::cout
-            << "The temporary Complete Module option "
-            << "will be removed after lab integration.\n";
+            std::cout << "1. Authorization Basics: ";
+
+            if (challenges[0].IsCompleted())
+            {
+                std::cout << "Completed\n";
+            }
+            else
+            {
+                std::cout << "Not Completed\n";
+            }
+
+            std::cout << "2. Scope Basics: ";
+
+            if (challenges[1].IsCompleted())
+            {
+                std::cout << "Completed\n";
+            }
+            else
+            {
+                std::cout << "Not Completed\n";
+            }
+
+            std::cout
+                << "\nCompleting both challenges will automatically "
+                << "complete this learning module.\n";
+
+            std::cout
+                << "You will also earn the module XP bonus.\n";
+        }
+        else
+        {
+            std::cout
+                << "Required training activities for this module "
+                << "are still being developed.\n";
+        }
 
         Pause();
     }
 }
 
 // ====================================
-// Hands-On Labs Display
+// Display Hands-On Labs
 // ====================================
 
 void TrainerApp::DisplayLabs() const
@@ -609,13 +576,10 @@ void TrainerApp::DisplayLabs() const
     std::cout << "====================================\n";
 
     for (int i = 0;
-        i < static_cast<int>(
-            labs.size());
+        i < static_cast<int>(labs.size());
         i++)
     {
-        std::cout
-            << i + 1
-            << ". ";
+        std::cout << i + 1 << ". ";
 
         if (labs[i].IsCompleted())
         {
@@ -630,22 +594,15 @@ void TrainerApp::DisplayLabs() const
             std::cout << "[LOCKED] ";
         }
 
-        std::cout
-            << labs[i].GetTitle()
-            << std::endl;
+        std::cout << labs[i].GetTitle() << std::endl;
 
-        std::cout
-            << "   Difficulty: "
+        std::cout << "   Difficulty: "
             << labs[i].GetDifficulty()
             << std::endl;
 
-        std::cout
-            << "   Reward: "
+        std::cout << "   Reward: "
             << labs[i].GetXPReward()
-            << " XP"
-            << std::endl;
-
-        std::cout << std::endl;
+            << " XP\n\n";
     }
 
     std::cout << "0. Return to Main Menu\n";
@@ -653,7 +610,7 @@ void TrainerApp::DisplayLabs() const
 }
 
 // ====================================
-// Hands-On Labs Menu
+// Open Hands-On Labs
 // ====================================
 
 void TrainerApp::OpenHandsOnLabs()
@@ -668,8 +625,7 @@ void TrainerApp::OpenHandsOnLabs()
 
         int choice = GetValidatedChoice(
             0,
-            static_cast<int>(
-                labs.size()));
+            static_cast<int>(labs.size()));
 
         if (choice == 0)
         {
@@ -677,48 +633,41 @@ void TrainerApp::OpenHandsOnLabs()
             continue;
         }
 
-        Lab* selectedLab =
-            &labs[choice - 1];
+        Lab* selectedLab = &labs[choice - 1];
 
+        // Prevent access to locked labs.
         if (!selectedLab->IsUnlocked())
         {
             std::cout << "\n====================================\n";
             std::cout << "             LAB LOCKED\n";
             std::cout << "====================================\n";
 
-            std::cout
-                << selectedLab->GetTitle()
+            std::cout << selectedLab->GetTitle()
                 << " is not available yet.\n";
 
-            std::cout
-                << "Complete earlier training first.\n";
+            std::cout << "Complete earlier training first.\n";
 
             Pause();
-
             continue;
         }
 
+        // Prevent duplicate XP rewards.
         if (selectedLab->IsCompleted())
         {
             selectedLab->DisplayLab();
             selectedLab->DisplayObjectives();
 
-            std::cout
-                << "\nYou already completed this lab.\n";
-
-            std::cout
-                << "No additional XP will be awarded.\n";
+            std::cout << "\nYou already completed this lab.\n";
+            std::cout << "No additional XP will be awarded.\n";
 
             Pause();
-
             continue;
         }
 
-        // First simulated lab.
+        // Launch the first simulated lab.
         if (choice == 1)
         {
-            RunTerminalInvestigationLab(
-                *selectedLab);
+            RunTerminalInvestigationLab(*selectedLab);
         }
     }
 }
@@ -727,11 +676,9 @@ void TrainerApp::OpenHandsOnLabs()
 // Terminal Investigation Lab
 // ====================================
 
-void TrainerApp::RunTerminalInvestigationLab(
-    Lab& lab)
+void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
 {
     bool labRunning = true;
-
     std::string command;
 
     lab.DisplayLab();
@@ -754,19 +701,16 @@ void TrainerApp::RunTerminalInvestigationLab(
 
     std::cout << "\nUseful command:\n";
     std::cout << "help\n";
-
     std::cout << "====================================\n";
 
     while (labRunning)
     {
         std::cout << "\nBBT-LAB> ";
 
-        std::getline(
-            std::cin,
-            command);
+        std::getline(std::cin, command);
 
         // ====================================
-        // Help
+        // Help Command
         // ====================================
 
         if (command == "help")
@@ -780,13 +724,12 @@ void TrainerApp::RunTerminalInvestigationLab(
         }
 
         // ====================================
-        // whoami
+        // Identify Current User
         // ====================================
 
         else if (command == "whoami")
         {
-            std::cout
-                << "bbt-training\\researcher\n";
+            std::cout << "bbt-training\\researcher\n";
 
             if (!lab.IsObjectiveCompleted(1))
             {
@@ -799,7 +742,7 @@ void TrainerApp::RunTerminalInvestigationLab(
         }
 
         // ====================================
-        // dir
+        // List Training Directory
         // ====================================
 
         else if (command == "dir")
@@ -829,12 +772,12 @@ void TrainerApp::RunTerminalInvestigationLab(
         }
 
         // ====================================
-        // Read training.txt
+        // Read Training File
         // ====================================
 
         else if (command == "type training.txt")
         {
-            // Require directory investigation first.
+            // Require the directory objective first.
             if (!lab.IsObjectiveCompleted(2))
             {
                 std::cout
@@ -866,15 +809,17 @@ void TrainerApp::RunTerminalInvestigationLab(
             }
         }
 
-        // Optional notes file.
+        // ====================================
+        // Optional Notes File
+        // ====================================
+
         else if (command == "type notes.txt")
         {
-            std::cout
-                << "Hint: Inspect training.txt.\n";
+            std::cout << "Hint: Inspect training.txt.\n";
         }
 
         // ====================================
-        // Status
+        // Display Lab Progress
         // ====================================
 
         else if (command == "status")
@@ -883,7 +828,7 @@ void TrainerApp::RunTerminalInvestigationLab(
         }
 
         // ====================================
-        // Exit
+        // Exit Lab
         // ====================================
 
         else if (command == "exit")
@@ -891,64 +836,58 @@ void TrainerApp::RunTerminalInvestigationLab(
             labRunning = false;
         }
 
-        // Blank command.
         else if (command.empty())
         {
             continue;
         }
 
-        // Unknown command.
+        // ====================================
+        // Invalid Lab Command
+        // ====================================
+
         else
         {
-            std::cout
-                << "'"
+            std::cout << "'"
                 << command
-                << "' is not a recognized "
-                << "lab command.\n";
+                << "' is not a recognized lab command.\n";
 
             std::cout
                 << "Type help to view available commands.\n";
         }
 
         // ====================================
-        // Automatic Lab Validation
+        // Automatic Lab Completion
         // ====================================
 
         if (lab.AreAllObjectivesCompleted() &&
             !lab.IsCompleted())
         {
-            bool completed =
-                lab.CompleteLab();
+            bool completed = lab.CompleteLab();
 
             if (completed)
             {
-                researcher.AddXP(
-                    lab.GetXPReward());
+                // Award the lab's XP once.
+                researcher.AddXP(lab.GetXPReward());
 
                 std::cout << "\n====================================\n";
                 std::cout << "            LAB COMPLETE!\n";
                 std::cout << "====================================\n";
 
-                std::cout
-                    << lab.GetTitle()
+                std::cout << lab.GetTitle()
                     << " completed successfully.\n";
 
                 std::cout
-                    << "\nAll required objectives "
-                    << "were validated.\n";
+                    << "\nAll required objectives were validated.\n";
 
-                std::cout
-                    << "\nXP Earned: "
+                std::cout << "\nXP Earned: "
                     << lab.GetXPReward()
                     << std::endl;
 
-                std::cout
-                    << "Total XP: "
+                std::cout << "Total XP: "
                     << researcher.GetTotalXP()
                     << std::endl;
 
-                std::cout
-                    << "Available XP: "
+                std::cout << "Available XP: "
                     << researcher.GetAvailableXP()
                     << std::endl;
 
@@ -961,8 +900,7 @@ void TrainerApp::RunTerminalInvestigationLab(
 
     if (!lab.IsCompleted())
     {
-        std::cout
-            << "\nLab exited before completion.\n";
+        std::cout << "\nLab exited before completion.\n";
 
         std::cout
             << "Your completed objectives remain "
@@ -973,7 +911,7 @@ void TrainerApp::RunTerminalInvestigationLab(
 }
 
 // ====================================
-// Challenge List
+// Display Training Challenges
 // ====================================
 
 void TrainerApp::DisplayChallenges() const
@@ -983,41 +921,32 @@ void TrainerApp::DisplayChallenges() const
     std::cout << "====================================\n";
 
     for (int i = 0;
-        i < static_cast<int>(
-            challenges.size());
+        i < static_cast<int>(challenges.size());
         i++)
     {
-        std::cout
-            << i + 1
-            << ". "
+        std::cout << i + 1 << ". "
             << challenges[i].GetTitle()
             << std::endl;
 
-        std::cout
-            << "   Category: "
+        std::cout << "   Category: "
             << challenges[i].GetCategory()
             << std::endl;
 
-        std::cout
-            << "   Difficulty: "
+        std::cout << "   Difficulty: "
             << challenges[i].GetDifficulty()
             << std::endl;
 
-        std::cout
-            << "   Reward: "
+        std::cout << "   Reward: "
             << challenges[i].GetXPReward()
-            << " XP"
-            << std::endl;
+            << " XP\n";
 
         if (challenges[i].IsCompleted())
         {
-            std::cout
-                << "   Status: Completed\n";
+            std::cout << "   Status: Completed\n";
         }
         else
         {
-            std::cout
-                << "   Status: Not Completed\n";
+            std::cout << "   Status: Not Completed\n";
         }
 
         std::cout << std::endl;
@@ -1027,7 +956,7 @@ void TrainerApp::DisplayChallenges() const
 }
 
 // ====================================
-// Training Challenges
+// Start Training
 // ====================================
 
 void TrainerApp::StartTraining()
@@ -1037,13 +966,10 @@ void TrainerApp::StartTraining()
     std::cout << "====================================\n";
 
     for (int i = 0;
-        i < static_cast<int>(
-            challenges.size());
+        i < static_cast<int>(challenges.size());
         i++)
     {
-        std::cout
-            << i + 1
-            << ". "
+        std::cout << i + 1 << ". "
             << challenges[i].GetTitle()
             << " ["
             << challenges[i].GetDifficulty()
@@ -1059,13 +985,11 @@ void TrainerApp::StartTraining()
 
     std::cout << "0. Return to Main Menu\n";
     std::cout << "====================================\n";
-
     std::cout << "Choose a challenge: ";
 
     int choice = GetValidatedChoice(
         0,
-        static_cast<int>(
-            challenges.size()));
+        static_cast<int>(challenges.size()));
 
     if (choice == 0)
     {
@@ -1077,6 +1001,7 @@ void TrainerApp::StartTraining()
 
     selectedChallenge->DisplayChallenge();
 
+    // Do not award XP for previously completed challenges.
     if (selectedChallenge->IsCompleted())
     {
         std::cout
@@ -1089,19 +1014,19 @@ void TrainerApp::StartTraining()
 
     std::cout << "\nEnter your answer: ";
 
-    int answer =
-        GetValidatedChoice(
-            1,
-            selectedChallenge->GetOptionCount());
+    int answer = GetValidatedChoice(
+        1,
+        selectedChallenge->GetOptionCount());
 
-    if (selectedChallenge->IsCorrectAnswer(
-        answer))
+    if (selectedChallenge->IsCorrectAnswer(answer))
     {
-        int oldLevel =
-            researcher.GetLevel();
+        // Save the level before awarding XP.
+        int oldLevel = researcher.GetLevel();
 
+        // Mark the challenge as completed.
         selectedChallenge->CompleteChallenge();
 
+        // Award challenge XP.
         researcher.AddXP(
             selectedChallenge->GetXPReward());
 
@@ -1111,28 +1036,75 @@ void TrainerApp::StartTraining()
 
         std::cout << "Correct!\n";
 
-        std::cout
-            << "You earned "
+        std::cout << "You earned "
             << selectedChallenge->GetXPReward()
             << " XP.\n";
 
-        std::cout
-            << "Total XP: "
+        // ====================================
+        // Automatic Learning Module Completion
+        // ====================================
+
+        // Level 0 requires:
+        // 1. Authorization Basics
+        // 2. Scope Basics
+        //
+        // Both must be completed before
+        // the learning module can be finished.
+        //
+        // The module bonus is awarded only once.
+
+        if (challenges[0].IsCompleted() &&
+            challenges[1].IsCompleted() &&
+            !learningModules[0].IsCompleted())
+        {
+            // Complete Learning Module 0.
+            learningModules[0].CompleteModule();
+
+            // Verify the module was completed.
+            if (learningModules[0].IsCompleted())
+            {
+                // Award the module XP bonus.
+                researcher.AddXP(
+                    learningModules[0].GetXPReward());
+
+                std::cout << "\n====================================\n";
+                std::cout << "       LEARNING MODULE COMPLETE!\n";
+                std::cout << "====================================\n";
+
+                std::cout
+                    << learningModules[0].GetTitle()
+                    << " completed successfully!\n";
+
+                std::cout << "\nModule XP Bonus: "
+                    << learningModules[0].GetXPReward()
+                    << " XP\n";
+
+                std::cout
+                    << "\nYou can now unlock "
+                    << "Computer Fundamentals.\n";
+
+                std::cout << "====================================\n";
+            }
+        }
+
+        // ====================================
+        // Display Updated Researcher Progress
+        // ====================================
+
+        std::cout << "\nTotal XP: "
             << researcher.GetTotalXP()
             << std::endl;
 
-        std::cout
-            << "Available XP: "
+        std::cout << "Available XP: "
             << researcher.GetAvailableXP()
             << std::endl;
 
-        if (researcher.GetLevel() >
-            oldLevel)
+        // Check whether the researcher gained a level.
+        if (researcher.GetLevel() > oldLevel)
         {
             std::cout << "\nLEVEL UP!\n";
 
-            std::cout
-                << "You are now Level "
+            std::cout << "You are now Level "
                 << researcher.GetLevel()
                 << "!\n";
         }
@@ -1143,11 +1115,8 @@ void TrainerApp::StartTraining()
         std::cout << "          TRY AGAIN\n";
         std::cout << "====================================\n";
 
-        std::cout
-            << "That answer was not correct.\n";
-
-        std::cout
-            << "No XP was lost.\n";
+        std::cout << "That answer was not correct.\n";
+        std::cout << "No XP was lost.\n";
     }
 }
 
@@ -1155,8 +1124,7 @@ void TrainerApp::StartTraining()
 // Main Menu Choice Handling
 // ====================================
 
-void TrainerApp::HandleChoice(
-    int choice)
+void TrainerApp::HandleChoice(int choice)
 {
     switch (choice)
     {
@@ -1199,9 +1167,7 @@ void TrainerApp::HandleChoice(
 
 void TrainerApp::Pause() const
 {
-    std::cout
-        << "\nPress Enter to continue...";
-
+    std::cout << "\nPress Enter to continue...";
     std::cin.get();
 }
 
@@ -1215,13 +1181,12 @@ void TrainerApp::Run()
     {
         DisplayMenu();
 
-        int choice =
-            GetValidatedChoice(1, 6);
+        int choice = GetValidatedChoice(1, 6);
 
         HandleChoice(choice);
 
-        // Learning Path and Lab menus
-        // handle their own pauses.
+        // Learning Path and Hands-On Labs
+        // handle their own pause messages.
         if (running &&
             choice != 2 &&
             choice != 3)
