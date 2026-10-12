@@ -1,95 +1,41 @@
 # BugBountyTrainer
 
-BugBountyTrainer is a C++ console application designed to teach users the fundamentals of bug bounty research and cybersecurity in a safe, simulated training environment.
+BugBountyTrainer is a C++ console application designed as a safe, simulated cybersecurity and bug bounty training environment.
 
-Users can create a researcher profile, complete fictional cybersecurity training challenges, earn XP, level up, and track their progress without interacting with real-world systems.
+The application allows users to create a researcher profile, complete cybersecurity training challenges, earn XP, level up, follow a structured learning path, and practice concepts through simulated hands-on labs.
 
 ## Project Goals
 
-- Practice object-oriented programming
-- Build a menu-driven C++ console application
-- Use multiple interacting classes
-- Organize code using separate header and source files
-- Create a cybersecurity training challenge system
-- Add user input validation
-- Add XP and level progression
-- Track challenge completion
-- Practice Git and GitHub development workflows
-- Continue expanding the application through weekly milestones
+* Practice object-oriented programming
+* Create a persistent menu-driven console application
+* Use multiple interacting classes
+* Practice file separation using header and source files
+* Add input validation and clear user feedback
+* Build a structured cybersecurity learning path
+* Create safe simulated hands-on training labs
+* Practice Git and GitHub development workflows
 
 ## Current Features
 
-- Researcher profile system
-- Researcher name, level, and XP tracking
-- Main menu navigation
-- Menu input validation
-- Menu choice range validation
-- Multiple training challenges
-- Challenge titles and descriptions
-- Challenge difficulty levels
-- Challenge XP rewards
-- Multiple-choice challenge questions
-- Challenge completion tracking
-- Prevention of duplicate XP rewards
-- XP and level progression
-- Training challenge selection
-- Ability to retry incorrectly answered challenges
-- TrainerApp class for program flow
-- Separate `.h` and `.cpp` files
-
-## Training Challenges
-
-BugBountyTrainer currently includes multiple cybersecurity training challenges.
-
-### Authorization Basics
-
-**Difficulty:** Easy  
-**XP Reward:** 100 XP
-
-Teaches users why authorization must be confirmed before performing security testing.
-
-### Scope Basics
-
-**Difficulty:** Easy  
-**XP Reward:** 150 XP
-
-Teaches users why bug bounty program scope must be followed and why unauthorized targets should not be tested.
-
-### Input Validation Basics
-
-**Difficulty:** Medium  
-**XP Reward:** 200 XP
-
-Introduces the importance of validating user input and preventing unexpected data from being processed.
-
-## XP and Level System
-
-Researchers begin at:
-
-- Level 1
-- 0 XP
-
-Completing challenges awards XP based on the challenge.
-
-The application checks the researcher's XP after completing a challenge and automatically increases the researcher's level when the required XP threshold is reached.
-
-Researchers currently gain a new level every 200 XP.
-
-Completed challenges cannot award XP more than once.
-
-## Input Validation
-
-The application validates user input before processing menu selections.
-
-The program handles:
-
-- Letters entered instead of numbers
-- Invalid input types
-- Numbers outside the allowed menu range
-- Invalid challenge selections
-- Invalid answer selections
-
-If invalid input is entered, the input stream is cleared and the user is asked to enter another selection instead of allowing the menu loop to fail.
+* Researcher profile system
+* Researcher level and XP tracking
+* Total XP and available XP
+* Training challenge system
+* Multiple training challenges
+* Vulnerability categories
+* Challenge difficulty levels
+* Challenge completion tracking
+* Prevention of duplicate XP rewards
+* Progressive Learning Path
+* Learning module prerequisites
+* XP-based module unlocking
+* Hands-On Labs menu
+* Terminal Investigation simulated lab
+* Lab objective tracking
+* Learning module and lab integration
+* Main menu navigation
+* Input validation and improved error feedback
+* Multiple C++ classes using separate header and source files
 
 ## Current Progress
 
@@ -97,88 +43,118 @@ If invalid input is entered, the input stream is cleared and the user is asked t
 
 Completed:
 
-- Initial application structure
-- Researcher class
-- Challenge class
-- TrainerApp class
-- Working main menu
-- Researcher profile display
-- Initial training challenge system
-- Challenge completion system
-- XP reward system
-- GitHub Project board setup
-- GitHub Issues
-- Weekly milestone planning
-- Project folder organization
-- Git and GitHub workflow setup
+* Initial application structure
+* Researcher class
+* Challenge class
+* TrainerApp class
+* Working main menu
+* Researcher profile display
+* Training challenge display
+* Challenge completion system
+* XP reward system
+* Project testing
+* GitHub Project board setup
+* GitHub Issues and milestone planning
 
 ### Week 2 / Milestone 2
 
 Completed:
 
-- Improved main menu input validation
-- Added menu choice range validation
-- Added multiple training challenges
-- Added challenge difficulty levels
-- Added multiple-choice challenge questions
-- Added XP and level progression
-- Added duplicate XP prevention
-- Connected the training system to the main menu
-- Added challenge selection
-- Added challenge completion status
-- Added retry support for incorrect answers
-
-Currently Developing:
-
-- Vulnerability categories
-- Researcher progress tracking
-- Additional training content
+* Multiple training challenges
+* Vulnerability categories
+* Challenge difficulty levels
+* Improved XP and level progression
+* Total XP and available XP tracking
+* Progressive Learning Path
+* Learning module prerequisites
+* XP-based module unlocking
+* LearningModule class
+* Lab class
+* Hands-On Labs menu
+* Terminal Investigation simulated lab
+* Lab objective validation
+* Learning module and lab integration
+* Improved menu input feedback
+* Milestone 2 testing and documentation
 
 ## Planned Development
 
-### Week 2 / Milestone 2
-
-- Add vulnerability categories
-- Expand researcher progress tracking
-- Continue adding training challenges
-- Continue testing menu and challenge input
-
 ### Week 3 / Milestone 3
 
-- Add tools and inventory system
-- Add researcher statistics
-- Expand challenge completion tracking
-- Add additional training content
+* Expand hands-on training activities
+* Add additional simulated labs
+* Continue improving researcher progression
+* Add tools and inventory features
+* Add additional researcher statistics
 
 ### Week 4 / Milestone 4
 
-- Add save and load functionality
-- Complete application testing
-- Fix remaining bugs
-- Complete project documentation
-- Final project cleanup
+* Add save and load functionality
+* Complete application testing and bug fixes
+* Final documentation
+* Final project cleanup
 
-## Program Flow
+## Technologies
 
-The current application flow is:
+* C++
+* C++20
+* Visual Studio
+* Git
+* GitHub
+* GitHub Projects
 
-```text
-Main Menu
-    |
-    +-- View Researcher Profile
-    |
-    +-- Start Training
-    |       |
-    |       +-- Select Challenge
-    |       |
-    |       +-- View Challenge Information
-    |       |
-    |       +-- Answer Question
-    |       |
-    |       +-- Earn XP
-    |       |
-    |       +-- Update Level
-    |
-    +-- View Challenges
-    |
-    +-- Exit
+## Development Workflow
+
+Development work is completed on the `dev` branch and merged into `main` through Pull Requests.
+
+The GitHub Project board uses:
+
+**Backlog → To Do → In Progress → Done**
+
+---
+
+## Milestone 1 Project Stand-Up
+
+### Overview
+
+During Milestone 1, I worked on building the foundation of BugBountyTrainer, a C++ console application for practicing bug bounty and cybersecurity concepts. I created the project structure, built the Researcher and Challenge classes, added the TrainerApp class to manage program flow, and created a working menu system. I also tested the challenge completion and XP system and organized the project using Git and GitHub.
+
+### Challenges
+
+One of the main challenges I encountered was organizing the project files correctly and making sure the header and source files were in the proper folders. I also had to fix include paths after moving files between the `src` and `include` folders. I addressed these problems by checking the actual file locations, correcting the include paths, rebuilding the project frequently, and testing each change before moving forward.
+
+### Accomplishments
+
+I improved my understanding of organizing a C++ project across multiple classes and files instead of placing everything inside `main()`. I also gained more experience using Git and GitHub to manage branches, commits, Issues, and my Project board. My program had a working Researcher profile, training challenge system, XP rewards, challenge completion tracking, and menu flow.
+
+### Next Steps
+
+For Milestone 2, I planned to expand the training challenge system by adding more challenges, vulnerability categories, difficulty levels, and improved XP and level progression. I also planned to improve input validation and continue keeping the code organized as the project grew.
+
+---
+
+## Milestone 2 Project Stand-Up
+
+### Overview
+
+During Milestone 2, I expanded BugBountyTrainer from a basic challenge system into a more structured cybersecurity training application. I added a progressive Learning Path, XP-based module unlocking, module prerequisites, and a Hands-On Labs system. I also created the Terminal Investigation lab, which allows the user to practice basic investigation commands inside a simulated environment.
+
+### Challenges
+
+One challenge I encountered was connecting the different progression systems together. The program needed to recognize when a hands-on lab had already been completed before its related learning module was unlocked. I updated the program so completed lab requirements are recognized correctly and the user's learning progression can continue.
+
+I also worked on improving input validation. Instead of displaying only generic error messages, the program now explains when a number is required and tells the user the valid selection range.
+
+### Accomplishments
+
+I created the `LearningModule` and `Lab` classes and connected them to the existing `TrainerApp`, `Researcher`, and `Challenge` systems. The program now tracks total XP separately from available XP, supports module prerequisites and XP costs, tracks lab objectives, awards XP for completed activities, and prevents duplicate XP rewards.
+
+I also successfully tested the main menu, Learning Path, module unlocking, challenge progression, Terminal Investigation lab, objective tracking, invalid input handling, and the connection between lab completion and learning module completion.
+
+### Next Steps
+
+For the next milestone, I plan to continue expanding the training content and hands-on activities. I want to add more simulated labs, continue developing the later learning modules, improve researcher progression, and begin working on additional tools and inventory features.
+
+## Author
+
+Raymond Smith
