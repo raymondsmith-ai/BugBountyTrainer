@@ -263,7 +263,8 @@ int TrainerApp::GetValidatedChoice(int minimum, int maximum) const
                 std::numeric_limits<std::streamsize>::max(),
                 '\n');
 
-            std::cout << "\nInvalid input.\n";
+            std::cout
+                << "\nInvalid input. Please enter a number only.\n";
         }
         else
         {
@@ -276,12 +277,11 @@ int TrainerApp::GetValidatedChoice(int minimum, int maximum) const
                 return choice;
             }
 
-            std::cout << "\nInvalid selection.\n";
+            std::cout
+                << "\nInvalid selection. Please choose a number from "
+                << minimum << " to "
+                << maximum << ".\n";
         }
-
-        std::cout << "Please enter a number from "
-            << minimum << " to "
-            << maximum << ": ";
     }
 }
 
