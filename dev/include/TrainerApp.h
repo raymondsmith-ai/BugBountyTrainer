@@ -39,9 +39,25 @@ private:
     void RunTerminalInvestigationLab(
         Lab& lab);
 
-    // Training functions.
+    // ====================================
+    // Training Functions
+    // ====================================
+
+    // Displays all available challenges.
     void DisplayChallenges() const;
+
+    // Starts the existing training system.
     void StartTraining();
+
+    // Displays available vulnerability categories.
+    void DisplayCategories() const;
+
+    // Allows researchers to select a category.
+    void BrowseCategories();
+
+    // Displays challenges in a selected category.
+    void DisplayChallengesByCategory(
+        const std::string& selectedCategory) const;
 
     // Input and usability functions.
     int GetValidatedChoice(

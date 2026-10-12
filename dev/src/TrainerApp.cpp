@@ -237,10 +237,11 @@ void TrainerApp::DisplayMenu() const
     std::cout << "3. Hands-On Labs\n";
     std::cout << "4. Start Training\n";
     std::cout << "5. View Challenges\n";
-    std::cout << "6. Exit\n";
+    std::cout << "6. Browse Vulnerability Categories\n";
+    std::cout << "7. Exit\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 6: ";
+    std::cout << "Enter a number from 1 to 7: ";
 }
 
 // ====================================
@@ -1250,7 +1251,13 @@ void TrainerApp::HandleChoice(int choice)
         break;
 
     case 6:
+        BrowseCategories();
+        break;
+
+    case 7:
         running = false;
+        std::cout << "\nThank you for using BugBountyTrainer!\n";
+        break;
 
         std::cout
             << "\nThank you for using Bug Bounty Trainer!\n";
@@ -1282,17 +1289,170 @@ void TrainerApp::Run()
     {
         DisplayMenu();
 
-        int choice = GetValidatedChoice(1, 6);
+        int choice = GetValidatedChoice(1, 7);
 
         HandleChoice(choice);
 
-        // Learning Path and Hands-On Labs
-        // handle their own pause messages.
+        // Learning Path, Hands-On Labs, and
+        // Vulnerability Categories handle
+        // their own pause messages.
         if (running &&
             choice != 2 &&
-            choice != 3)
+            choice != 3 &&
+            choice != 6)
         {
             Pause();
         }
     }
 }
+
+            // ====================================
+// Display Vulnerability Categories
+// ====================================
+
+            void TrainerApp::DisplayCategories() const
+            {
+                std::cout << "\n====================================\n";
+                std::cout << "       VULNERABILITY CATEGORIES\n";
+                std::cout << "====================================\n";
+
+                // Collect unique categories from existing challenges.
+                std::vector<std::string> categories;
+
+                for (const Challenge& challenge : challenges)
+                {
+                    std::string category = challenge.GetCategory();
+
+                    bool found = false;
+
+                    for (const std::string& existing : categories)
+                    {
+                        if (existing == category)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        categories.push_back(category);
+                    }
+                }
+
+                // Display available categories.
+                for (int i = 0; i < static_cast<int>(categories.size()); i++)
+                {
+                    std::cout << i + 1 << ". "
+                        << categories[i] << std::endl;
+                }
+
+                std::cout << "\n0. Return to Main Menu\n";
+                std::cout << "====================================\n";
+            }
+
+            // ====================================
+            // Display Challenges by Category
+            // ====================================
+
+            void TrainerApp::DisplayChallengesByCategory(
+                const std::string & selectedCategory) const
+            {
+                std::cout << "\n====================================\n";
+                std::cout << "       CATEGORY: " << selectedCategory << "\n";
+                std::cout << "====================================\n";
+
+                bool found = false;
+
+                for (const Challenge& challenge : challenges)
+                {
+                    if (challenge.GetCategory() == selectedCategory)
+                    {
+                        found = true;
+
+                        std::cout << "\nChallenge: "
+                            << challenge.GetTitle() << std::endl;
+
+                        std::cout << "Difficulty: "
+                            << challenge.GetDifficulty() << std::endl;
+
+                        std::cout << "XP Reward: "
+                            << challenge.GetXPReward() << std::endl;
+
+                        std::cout << "Status: ";
+
+                        if (challenge.IsCompleted())
+                        {
+                            std::cout << "Completed\n";
+                        }
+                        else
+                        {
+                            std::cout << "Not Completed\n";
+                        }
+                    }
+                }
+
+                if (!found)
+                {
+                    std::cout << "\nNo challenges available in this category.\n";
+                }
+
+                std::cout << "====================================\n";
+            }
+
+            // ====================================
+            // Browse Vulnerability Categories
+            // ====================================
+
+            void TrainerApp::BrowseCategories()
+            {
+                std::vector<std::string> categories;
+
+                // Build a list of unique categories.
+                for (const Challenge& challenge : challenges)
+                {
+                    std::string category = challenge.GetCategory();
+
+                    bool found = false;
+
+                    for (const std::string& existing : categories)
+                    {
+                        if (existing == category)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        categories.push_back(category);
+                    }
+                }
+
+                bool browsing = true;
+
+                while (browsing)
+                {
+                    DisplayCategories();
+
+                    std::cout << "Select a category: ";
+
+                    int choice = GetValidatedChoice(
+                        0,
+                        static_cast<int>(categories.size()));
+
+                    if (choice == 0)
+                    {
+                        browsing = false;
+                    }
+                    else
+                    {
+                        DisplayChallengesByCategory(categories[choice - 1]);
+
+                        Pause();
+                    }
+                }
+            }
+     
+    
