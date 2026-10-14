@@ -139,3 +139,16 @@ void LearningModule::DisplayModule() const
 
     std::cout << "====================================\n";
 }
+// ====================================
+// Restore Learning Module Progress
+// ====================================
+// Restores saved module status without
+// awarding XP or charging unlock costs.
+
+void LearningModule::RestoreProgress(
+    bool savedUnlocked,
+    bool savedCompleted)
+{
+    unlocked = savedUnlocked || savedCompleted;
+    completed = savedCompleted;
+}

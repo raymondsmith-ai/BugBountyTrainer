@@ -1420,9 +1420,10 @@ void TrainerApp::SaveProgress()
 
     // Save researcher information and challenges.
     if (SaveManager::SaveProgress(
-        researcher,
-        challenges,
-        filename))
+    researcher,
+    challenges,
+    learningModules,
+    filename))
     {
         std::cout << "\nProgress saved successfully!\n";
     }
@@ -1446,9 +1447,10 @@ void TrainerApp::LoadProgress()
 
     // Restore researcher information and challenges.
     if (SaveManager::LoadProgress(
-        researcher,
-        challenges,
-        filename))
+    researcher,
+    challenges,
+    learningModules,
+    filename))
     {
         std::cout << "\nProgress restored successfully!\n";
     }

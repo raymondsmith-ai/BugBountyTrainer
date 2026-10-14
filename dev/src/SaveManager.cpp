@@ -6,12 +6,13 @@
 #include <vector>
 
 // ====================================
-// Save Researcher and Challenges
+// Save Researcher, Challenges, Modules
 // ====================================
 
 bool SaveManager::SaveProgress(
     const Researcher& researcher,
     const std::vector<Challenge>& challenges,
+    const std::vector<LearningModule>& learningModules,
     const std::string& filename)
 {
     std::ofstream file(filename);
@@ -22,19 +23,30 @@ bool SaveManager::SaveProgress(
         return false;
     }
 
+    // Save file format version.
+    file << "BBT_SAVE_V2\n";
+
     // Save researcher information.
     file << researcher.GetName() << '\n';
     file << researcher.GetLevel() << '\n';
     file << researcher.GetTotalXP() << '\n';
     file << researcher.GetAvailableXP() << '\n';
 
-    // Save the number of challenges.
+    // Save challenge completion.
     file << challenges.size() << '\n';
 
-    // Save each challenge's completion status.
     for (const Challenge& challenge : challenges)
     {
         file << challenge.IsCompleted() << '\n';
+    }
+
+    // Save learning module progress.
+    file << learningModules.size() << '\n';
+
+    for (const LearningModule& module : learningModules)
+    {
+        file << module.IsUnlocked() << ' '
+             << module.IsCompleted() << '\n';
     }
 
     file.close();
@@ -45,18 +57,17 @@ bool SaveManager::SaveProgress(
         return false;
     }
 
-
-
     return true;
 }
 
 // ====================================
-// Load Researcher and Challenges
+// Load Researcher, Challenges, Modules
 // ====================================
 
 bool SaveManager::LoadProgress(
     Researcher& researcher,
     std::vector<Challenge>& challenges,
+    std::vector<LearningModule>& learningModules,
     const std::string& filename)
 {
     std::ifstream file(filename);
@@ -67,11 +78,20 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
+    std::string version;
     std::string savedName;
 
     int savedLevel = 0;
     int savedTotalXP = 0;
     int savedAvailableXP = 0;
+
+    // Check save file version.
+    if (!std::getline(file, version) ||
+        version != "BBT_SAVE_V2")
+    {
+        std::cout << "\nUnsupported save file format.\n";
+        return false;
+    }
 
     // Read researcher name.
     if (!std::getline(file, savedName) ||
@@ -83,14 +103,14 @@ bool SaveManager::LoadProgress(
 
     // Read researcher progress.
     if (!(file >> savedLevel
-        >> savedTotalXP
-        >> savedAvailableXP))
+               >> savedTotalXP
+               >> savedAvailableXP))
     {
         std::cout << "\nInvalid researcher data.\n";
         return false;
     }
 
-    // Read the number of saved challenges.
+    // Read challenge count.
     std::size_t challengeCount = 0;
 
     if (!(file >> challengeCount) ||
@@ -100,7 +120,7 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    // Read completion flags into temporary storage.
+    // Read challenge completion flags.
     std::vector<bool> completedChallenges;
 
     for (std::size_t i = 0; i < challengeCount; i++)
@@ -117,7 +137,38 @@ bool SaveManager::LoadProgress(
         completedChallenges.push_back(completed == 1);
     }
 
-    // Validate researcher progress before changing it.
+    // Read learning module count.
+    std::size_t moduleCount = 0;
+
+    if (!(file >> moduleCount) ||
+        moduleCount != learningModules.size())
+    {
+        std::cout << "\nInvalid learning module count.\n";
+        return false;
+    }
+
+    // Temporary module progress.
+    std::vector<bool> unlockedModules;
+    std::vector<bool> completedModules;
+
+    for (std::size_t i = 0; i < moduleCount; i++)
+    {
+        int unlocked = 0;
+        int completed = 0;
+
+        if (!(file >> unlocked >> completed) ||
+            (unlocked != 0 && unlocked != 1) ||
+            (completed != 0 && completed != 1))
+        {
+            std::cout << "\nInvalid module data.\n";
+            return false;
+        }
+
+        unlockedModules.push_back(unlocked == 1);
+        completedModules.push_back(completed == 1);
+    }
+
+    // Restore researcher XP and level.
     if (!researcher.RestoreProgress(
         savedLevel,
         savedTotalXP,
@@ -127,14 +178,21 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    // Restore challenge completion without awarding XP.
+    // Restore challenges without awarding XP.
     for (std::size_t i = 0; i < challengeCount; i++)
     {
         challenges[i].RestoreCompletion(
             completedChallenges[i]);
     }
 
-    std::cout << "\nProgress loaded successfully!\n";
+    // Restore learning modules without
+    // awarding XP or charging unlock costs.
+    for (std::size_t i = 0; i < moduleCount; i++)
+    {
+        learningModules[i].RestoreProgress(
+            unlockedModules[i],
+            completedModules[i]);
+    }
 
     return true;
 }

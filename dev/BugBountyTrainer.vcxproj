@@ -151,7 +151,7 @@
     <ClInclude Include="include\Challenge.h" />
     <ClInclude Include="include\Lab.h" />
     <ClInclude Include="include\Researcher.h" />
-    <ClInclude Include="LearningModule.h" />
+    <ClInclude Include="include\LearningModule.h" />
     <ClInclude Include="include\TrainerApp.h" />
     <ClInclude Include="include\SaveManager.h" />
   </ItemGroup>
@@ -159,4 +159,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
