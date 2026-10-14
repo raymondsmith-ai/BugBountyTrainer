@@ -38,4 +38,18 @@ public:
     // Attempts to spend available XP.
     // Returns true if the purchase succeeds.
     bool SpendXP(int amount);
+    // ====================================
+// Restore Researcher Progress
+// ====================================
+// Restores researcher information from
+// a previously saved game.
+//
+// Returns true if the saved values
+// are valid.
+// ====================================
+
+    bool RestoreProgress(
+        int savedLevel,
+        int savedTotalXP,
+        int savedAvailableXP);
 };

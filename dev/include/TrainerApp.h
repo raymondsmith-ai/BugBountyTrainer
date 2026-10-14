@@ -12,6 +12,15 @@ class TrainerApp
 {
 private:
     Researcher researcher;
+    // ====================================
+// Save and Load Functions
+// ====================================
+
+// Saves the researcher's progress.
+    void SaveProgress();
+
+    // Loads previously saved progress.
+    void LoadProgress();
 
     // Stores training challenges.
     std::vector<Challenge> challenges;

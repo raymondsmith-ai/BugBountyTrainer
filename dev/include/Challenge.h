@@ -48,4 +48,11 @@ public:
     bool IsCorrectAnswer(int answer) const;
 
     void CompleteChallenge();
+    // ====================================
+// Restore Challenge Completion
+// ====================================
+// Restores the saved completion status
+// without awarding additional XP.
+
+    void RestoreCompletion(bool savedCompleted);
 };

@@ -107,3 +107,28 @@ bool Researcher::SpendXP(int amount)
 
     return true;
 }
+// ====================================
+// Restore Researcher Progress
+// ====================================
+
+bool Researcher::RestoreProgress(
+    int savedLevel,
+    int savedTotalXP,
+    int savedAvailableXP)
+{
+    // Reject invalid saved data.
+    if (savedLevel < 1 ||
+        savedTotalXP < 0 ||
+        savedAvailableXP < 0 ||
+        savedAvailableXP > savedTotalXP)
+    {
+        return false;
+    }
+
+    // Restore the saved progression.
+    level = savedLevel;
+    totalXP = savedTotalXP;
+    availableXP = savedAvailableXP;
+
+    return true;
+}

@@ -118,3 +118,11 @@ void Challenge::CompleteChallenge()
 {
     completed = true;
 }
+// ====================================
+// Restore Challenge Completion
+// ====================================
+
+void Challenge::RestoreCompletion(bool savedCompleted)
+{
+    completed = savedCompleted;
+}

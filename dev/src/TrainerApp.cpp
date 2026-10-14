@@ -1,4 +1,5 @@
 #include "../include/TrainerApp.h"
+#include "../include/SaveManager.h"
 
 #include <iostream>
 #include <limits>
@@ -231,17 +232,18 @@ void TrainerApp::DisplayMenu() const
         << researcher.GetAvailableXP() << std::endl;
 
     std::cout << "====================================\n";
-
     std::cout << "1. View Researcher Profile\n";
     std::cout << "2. Learning Path\n";
     std::cout << "3. Hands-On Labs\n";
     std::cout << "4. Start Training\n";
     std::cout << "5. View Challenges\n";
     std::cout << "6. Browse Vulnerability Categories\n";
-    std::cout << "7. Exit\n";
+    std::cout << "7. Save Progress\n";
+    std::cout << "8. Load Progress\n";
+    std::cout << "9. Exit\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 7: ";
+    std::cout << "Enter a number from 1 to 9: ";
 }
 
 // ====================================
@@ -628,7 +630,7 @@ void TrainerApp::OpenLearningPath()
         }
         Pause();
     }
-    }
+}
 // ====================================
 // Display Hands-On Labs
 // ====================================
@@ -932,13 +934,13 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
             {
                 // Award the lab's XP once.
                 researcher.AddXP(lab.GetXPReward());
-                
-        // ====================================
-        // Connect Lab to Learning Module
-        // ====================================
 
-                     // Terminal Investigation is the required
-                     // hands-on lab for Computer Fundamentals.
+                // ====================================
+                // Connect Lab to Learning Module
+                // ====================================
+
+                             // Terminal Investigation is the required
+                             // hands-on lab for Computer Fundamentals.
                 if (lab.GetTitle() == "Terminal Investigation" &&
                     learningModules[1].IsUnlocked() &&
                     !learningModules[1].IsCompleted())
@@ -1233,38 +1235,31 @@ void TrainerApp::HandleChoice(int choice)
     case 1:
         researcher.DisplayProfile();
         break;
-
     case 2:
         OpenLearningPath();
         break;
-
     case 3:
         OpenHandsOnLabs();
         break;
-
     case 4:
         StartTraining();
         break;
-
     case 5:
         DisplayChallenges();
         break;
-
     case 6:
         BrowseCategories();
         break;
-
     case 7:
+        SaveProgress();
+        break;
+    case 8:
+        LoadProgress();
+        break;
+    case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
-        break;
-
-        std::cout
-            << "\nThank you for using Bug Bounty Trainer!\n";
-
-        std::cout
-            << "Keep learning and test responsibly.\n";
-
+        std::cout << "Keep learning and test responsibly.\n";
         break;
     }
 }
@@ -1288,171 +1283,177 @@ void TrainerApp::Run()
     while (running)
     {
         DisplayMenu();
-
-        int choice = GetValidatedChoice(1, 7);
-
+        int choice = GetValidatedChoice(1, 9);
         HandleChoice(choice);
 
-        // Learning Path, Hands-On Labs, and
-        // Vulnerability Categories handle
-        // their own pause messages.
-        if (running &&
-            choice != 2 &&
-            choice != 3 &&
-            choice != 6)
+        // These screens handle their own pauses.
+        if (running && choice != 2 && choice != 3 && choice != 6)
         {
             Pause();
         }
     }
 }
 
-            // ====================================
+// ====================================
 // Display Vulnerability Categories
 // ====================================
 
-            void TrainerApp::DisplayCategories() const
+void TrainerApp::DisplayCategories() const
+{
+    std::cout << "\n====================================\n";
+    std::cout << "       VULNERABILITY CATEGORIES\n";
+    std::cout << "====================================\n";
+    std::vector<std::string> categories;
+
+    for (const Challenge& challenge : challenges)
+    {
+        const std::string category = challenge.GetCategory();
+        bool found = false;
+        for (const std::string& existing : categories)
+        {
+            if (existing == category)
             {
-                std::cout << "\n====================================\n";
-                std::cout << "       VULNERABILITY CATEGORIES\n";
-                std::cout << "====================================\n";
-
-                // Collect unique categories from existing challenges.
-                std::vector<std::string> categories;
-
-                for (const Challenge& challenge : challenges)
-                {
-                    std::string category = challenge.GetCategory();
-
-                    bool found = false;
-
-                    for (const std::string& existing : categories)
-                    {
-                        if (existing == category)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        categories.push_back(category);
-                    }
-                }
-
-                // Display available categories.
-                for (int i = 0; i < static_cast<int>(categories.size()); i++)
-                {
-                    std::cout << i + 1 << ". "
-                        << categories[i] << std::endl;
-                }
-
-                std::cout << "\n0. Return to Main Menu\n";
-                std::cout << "====================================\n";
+                found = true;
+                break;
             }
+        }
+        if (!found)
+        {
+            categories.push_back(category);
+        }
+    }
 
-            // ====================================
-            // Display Challenges by Category
-            // ====================================
+    for (int i = 0; i < static_cast<int>(categories.size()); ++i)
+    {
+        std::cout << i + 1 << ". " << categories[i] << '\n';
+    }
 
-            void TrainerApp::DisplayChallengesByCategory(
-                const std::string & selectedCategory) const
+    std::cout << "\n0. Return to Main Menu\n";
+    std::cout << "====================================\n";
+}
+
+// ====================================
+// Display Challenges by Category
+// ====================================
+
+void TrainerApp::DisplayChallengesByCategory(const std::string& selectedCategory) const
+{
+    std::cout << "\n====================================\n";
+    std::cout << "       CATEGORY: " << selectedCategory << '\n';
+    std::cout << "====================================\n";
+
+    bool found = false;
+    for (const Challenge& challenge : challenges)
+    {
+        if (challenge.GetCategory() == selectedCategory)
+        {
+            found = true;
+            std::cout << "\nChallenge: " << challenge.GetTitle() << '\n';
+            std::cout << "Difficulty: " << challenge.GetDifficulty() << '\n';
+            std::cout << "XP Reward: " << challenge.GetXPReward() << '\n';
+            std::cout << "Status: " << (challenge.IsCompleted() ? "Completed" : "Not Completed") << '\n';
+        }
+    }
+
+    if (!found)
+    {
+        std::cout << "\nNo challenges available in this category.\n";
+    }
+    std::cout << "====================================\n";
+}
+
+// ====================================
+// Browse Vulnerability Categories
+// ====================================
+
+void TrainerApp::BrowseCategories()
+{
+    std::vector<std::string> categories;
+    for (const Challenge& challenge : challenges)
+    {
+        const std::string category = challenge.GetCategory();
+        bool found = false;
+        for (const std::string& existing : categories)
+        {
+            if (existing == category)
             {
-                std::cout << "\n====================================\n";
-                std::cout << "       CATEGORY: " << selectedCategory << "\n";
-                std::cout << "====================================\n";
-
-                bool found = false;
-
-                for (const Challenge& challenge : challenges)
-                {
-                    if (challenge.GetCategory() == selectedCategory)
-                    {
-                        found = true;
-
-                        std::cout << "\nChallenge: "
-                            << challenge.GetTitle() << std::endl;
-
-                        std::cout << "Difficulty: "
-                            << challenge.GetDifficulty() << std::endl;
-
-                        std::cout << "XP Reward: "
-                            << challenge.GetXPReward() << std::endl;
-
-                        std::cout << "Status: ";
-
-                        if (challenge.IsCompleted())
-                        {
-                            std::cout << "Completed\n";
-                        }
-                        else
-                        {
-                            std::cout << "Not Completed\n";
-                        }
-                    }
-                }
-
-                if (!found)
-                {
-                    std::cout << "\nNo challenges available in this category.\n";
-                }
-
-                std::cout << "====================================\n";
+                found = true;
+                break;
             }
+        }
+        if (!found)
+        {
+            categories.push_back(category);
+        }
+    }
 
-            // ====================================
-            // Browse Vulnerability Categories
-            // ====================================
+    bool browsing = true;
+    while (browsing)
+    {
+        DisplayCategories();
+        std::cout << "Select a category: ";
+        int choice = GetValidatedChoice(0, static_cast<int>(categories.size()));
+        if (choice == 0)
+        {
+            browsing = false;
+        }
+        else
+        {
+            DisplayChallengesByCategory(categories[choice - 1]);
 
-            void TrainerApp::BrowseCategories()
-            {
-                std::vector<std::string> categories;
+            Pause();
+        }
+    }
+}
 
-                // Build a list of unique categories.
-                for (const Challenge& challenge : challenges)
-                {
-                    std::string category = challenge.GetCategory();
+// ====================================
+// Save Researcher and Challenge Progress
+// ====================================
 
-                    bool found = false;
+void TrainerApp::SaveProgress()
+{
+    const std::string filename = "researcher_save.txt";
 
-                    for (const std::string& existing : categories)
-                    {
-                        if (existing == category)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
+    std::cout << "\n====================================\n";
+    std::cout << "          SAVE PROGRESS\n";
+    std::cout << "====================================\n";
 
-                    if (!found)
-                    {
-                        categories.push_back(category);
-                    }
-                }
+    // Save researcher information and challenges.
+    if (SaveManager::SaveProgress(
+        researcher,
+        challenges,
+        filename))
+    {
+        std::cout << "\nProgress saved successfully!\n";
+    }
+    else
+    {
+        std::cout << "\nUnable to save progress.\n";
+    }
+}
 
-                bool browsing = true;
+// ====================================
+// Load Researcher and Challenge Progress
+// ====================================
 
-                while (browsing)
-                {
-                    DisplayCategories();
+void TrainerApp::LoadProgress()
+{
+    const std::string filename = "researcher_save.txt";
 
-                    std::cout << "Select a category: ";
+    std::cout << "\n====================================\n";
+    std::cout << "          LOAD PROGRESS\n";
+    std::cout << "====================================\n";
 
-                    int choice = GetValidatedChoice(
-                        0,
-                        static_cast<int>(categories.size()));
-
-                    if (choice == 0)
-                    {
-                        browsing = false;
-                    }
-                    else
-                    {
-                        DisplayChallengesByCategory(categories[choice - 1]);
-
-                        Pause();
-                    }
-                }
-            }
-     
-    
+    // Restore researcher information and challenges.
+    if (SaveManager::LoadProgress(
+        researcher,
+        challenges,
+        filename))
+    {
+        std::cout << "\nProgress restored successfully!\n";
+    }
+    else
+    {
+        std::cout << "\nUnable to load progress.\n";
+    }
+}
