@@ -2,7 +2,78 @@
 #include "../include/SaveManager.h"
 
 #include <iostream>
-#include <limits>
+#include <string>
+#include <stdexcept>
+#include <algorithm>
+#include <array>
+#include <random>
+#include <unordered_map>
+#include <numeric>
+// Shared assessment helpers. The last correct-answer position is remembered
+// for each question during this application session, including retakes.
+namespace
+{
+    std::mt19937& AssessmentRng()
+    {
+        static std::mt19937 rng(std::random_device{}());
+        return rng;
+    }
+
+    // Returns shuffled original answer indices, with the correct answer
+    // moved to a different letter than on the previous attempt.
+    std::vector<int> ShuffleAnswerPositions(
+        const std::string& questionKey, int count, int correctIndex)
+    {
+        static std::unordered_map<std::string, int> lastCorrectPosition;
+        std::vector<int> order(count);
+        std::iota(order.begin(), order.end(), 0);
+        std::shuffle(order.begin(), order.end(), AssessmentRng());
+
+        auto previous = lastCorrectPosition.find(questionKey);
+        if (previous != lastCorrectPosition.end() && count > 1)
+        {
+            auto it = std::find(order.begin(), order.end(), correctIndex);
+            int current = static_cast<int>(it - order.begin());
+            if (current == previous->second)
+            {
+                int swapPosition = (current + 1) % count;
+                std::swap(order[current], order[swapPosition]);
+            }
+        }
+
+        auto it = std::find(order.begin(), order.end(), correctIndex);
+        lastCorrectPosition[questionKey] = static_cast<int>(it - order.begin());
+        return order;
+    }
+
+    // Read a single a/b/c answer, accepting uppercase as well.
+    int ReadLetterAnswer(int count)
+    {
+        while (true)
+        {
+            std::cout << "Enter your answer (a, b, or c): ";
+            std::string input;
+            if (!std::getline(std::cin, input))
+            {
+                throw std::runtime_error("Input stream closed.");
+            }
+            if (input.size() == 1)
+            {
+                char letter = input[0];
+                if (letter >= 'A' && letter <= 'Z')
+                {
+                    letter = static_cast<char>(letter - 'A' + 'a');
+                }
+                int index = letter - 'a';
+                if (index >= 0 && index < count)
+                {
+                    return index;
+                }
+            }
+            std::cout << "Invalid answer. Please enter a valid letter.\n";
+        }
+    }
+}
 
 // ====================================
 // Constructor
@@ -247,44 +318,49 @@ void TrainerApp::DisplayMenu() const
 }
 
 // ====================================
-// Input Validation
+// Validate Menu Input
 // ====================================
 
 int TrainerApp::GetValidatedChoice(int minimum, int maximum) const
 {
-    int choice;
+    std::string input;
 
     while (true)
     {
-        std::cin >> choice;
-
-        if (std::cin.fail())
+        if (!std::getline(std::cin, input))
         {
-            std::cin.clear();
-
-            std::cin.ignore(
-                std::numeric_limits<std::streamsize>::max(),
-                '\n');
-
-            std::cout
-                << "\nInvalid input. Please enter a number only.\n";
+            throw std::runtime_error("Input stream closed.");
         }
-        else
+
+        try
         {
-            std::cin.ignore(
-                std::numeric_limits<std::streamsize>::max(),
-                '\n');
+            std::size_t position = 0;
+            int choice = std::stoi(input, &position);
+
+            // Reject extra characters, such as 2abc.
+            if (position != input.length())
+            {
+                throw std::invalid_argument("Extra characters");
+            }
 
             if (choice >= minimum && choice <= maximum)
             {
                 return choice;
             }
 
-            std::cout
-                << "\nInvalid selection. Please choose a number from "
-                << minimum << " to "
-                << maximum << ".\n";
+            std::cout << "\nInvalid selection. Choose a number from "
+                << minimum << " to " << maximum << ".\n";
         }
+        catch (const std::invalid_argument&)
+        {
+            std::cout << "\nInvalid input. Please enter a whole number.\n";
+        }
+        catch (const std::out_of_range&)
+        {
+            std::cout << "\nNumber is too large. Please try again.\n";
+        }
+
+        std::cout << "Enter your choice: ";
     }
 }
 
@@ -622,6 +698,70 @@ void TrainerApp::OpenLearningPath()
             std::cout
                 << "You will also earn the module XP bonus.\n";
         }
+        else if (moduleIndex == 2)
+        {
+            // Linux Fundamentals: shuffled answer letters on every attempt.
+            struct LinuxQuestion
+            {
+                std::string prompt;
+                std::array<std::string, 3> options;
+                int correctIndex;
+            };
+            const std::array<LinuxQuestion, 3> questions = { {
+                {"Which command lists files?", {"pwd", "ls", "cd"}, 1},
+                {"Which command displays your current directory?", {"pwd", "cat", "mkdir"}, 0},
+                {"Which command changes file permissions?", {"ls", "cd", "chmod"}, 2}
+            } };
+
+            std::cout << "\nLINUX FUNDAMENTALS\n\n"
+                << "pwd   - Display the current directory.\n"
+                << "ls    - List files and directories.\n"
+                << "cd    - Change directories.\n"
+                << "cat   - Display file contents.\n"
+                << "mkdir - Create a directory.\n"
+                << "chmod - Change file permissions.\n"
+                << "\nKNOWLEDGE ASSESSMENT\n"
+                << "Answer all three questions correctly to pass.\n";
+
+            int correctAnswers = 0;
+            for (int i = 0; i < static_cast<int>(questions.size()); ++i)
+            {
+                const auto& question = questions[i];
+                std::vector<int> order = ShuffleAnswerPositions(
+                    "Linux Fundamentals Q" + std::to_string(i),
+                    3, question.correctIndex);
+                std::cout << "\n" << i + 1 << ". " << question.prompt << "\n\n";
+                for (int j = 0; j < 3; ++j)
+                {
+                    std::cout << "   " << static_cast<char>('a' + j)
+                        << ". " << question.options[order[j]] << "\n";
+                }
+                std::cout << "\n";
+                int selectedPosition = ReadLetterAnswer(3);
+                if (order[selectedPosition] == question.correctIndex)
+                {
+                    ++correctAnswers;
+                }
+            }
+
+            std::cout << "\nAssessment Score: " << correctAnswers << "/3\n";
+            if (correctAnswers == 3 && !selectedModule->IsCompleted())
+            {
+                selectedModule->CompleteModule();
+                if (selectedModule->IsCompleted())
+                {
+                    researcher.AddXP(selectedModule->GetXPReward());
+                    std::cout << "\n[MODULE COMPLETE] Linux Fundamentals!\n"
+                        << "XP Earned: " << selectedModule->GetXPReward()
+                        << "\nNetworking Fundamentals can now be unlocked "
+                        << "when its requirements are met.\n";
+                }
+            }
+            else if (correctAnswers != 3)
+            {
+                std::cout << "Assessment not passed. Review the lesson and try again.\n";
+            }
+        }
         else
         {
             std::cout
@@ -773,7 +913,10 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
     {
         std::cout << "\nBBT-LAB> ";
 
-        std::getline(std::cin, command);
+        if (!std::getline(std::cin, command))
+        {
+            throw std::runtime_error("Input stream closed.");
+        }
 
         // ====================================
         // Help Command
@@ -785,6 +928,7 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
             std::cout << "whoami\n";
             std::cout << "dir\n";
             std::cout << "type <filename>\n";
+            std::cout << "submit <code>\n";
             std::cout << "status\n";
             std::cout << "exit\n";
         }
@@ -865,13 +1009,53 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
                     << "training.txt inspected.\n";
             }
 
+            // The researcher must manually submit the
+            // validation code to complete Objective 4.
             if (!lab.IsObjectiveCompleted(4))
             {
-                lab.CompleteObjective(4);
-
                 std::cout
-                    << "[OBJECTIVE COMPLETE] "
-                    << "Validation code recovered.\n";
+                    << "\n[OBJECTIVE PENDING] "
+                    << "Submit the validation code using:\n"
+                    << "submit <code>\n";
+            }
+        }
+        // ====================================
+        // Submit Validation Code
+        // ====================================
+        else if (command.rfind("submit ", 0) == 0)
+        {
+            // Require the training file to be inspected first.
+            if (!lab.IsObjectiveCompleted(3))
+            {
+                std::cout
+                    << "\nInspect training.txt before "
+                    << "submitting a validation code.\n";
+            }
+            else if (lab.IsObjectiveCompleted(4))
+            {
+                std::cout
+                    << "\nValidation code already accepted.\n";
+            }
+            else
+            {
+                // Extract the submitted code.
+                std::string submittedCode = command.substr(7);
+
+                // Compare against the training file code.
+                if (submittedCode == "BBT-ALPHA-101")
+                {
+                    lab.CompleteObjective(4);
+
+                    std::cout
+                        << "\n[OBJECTIVE COMPLETE] "
+                        << "Validation code accepted!\n";
+                }
+                else
+                {
+                    std::cout
+                        << "\nIncorrect validation code. "
+                        << "Please try again.\n";
+                }
             }
         }
 
@@ -1114,13 +1298,77 @@ void TrainerApp::StartTraining()
         return;
     }
 
-    selectedChallenge->DisplayQuestion();
+    // Existing three challenges have known answer text in the constructor.
+    // Keep their original answer indices for Challenge::IsCorrectAnswer.
+    // Future challenges should expose their options via Challenge getters,
+    // so they can use the same helper without adding another mapping here.
+    std::vector<std::string> options;
+    if (selectedChallenge->GetTitle() == "Authorization Basics")
+    {
+        options = { "The website has a login page",
+                   "You have authorization to test the target",
+                   "The website uses HTTPS" };
+    }
+    else if (selectedChallenge->GetTitle() == "Scope Basics")
+    {
+        options = { "Test it anyway",
+                   "Do not test it unless you receive authorization",
+                   "Test only the login page" };
+    }
+    else if (selectedChallenge->GetTitle() == "Input Validation Basics")
+    {
+        options = { "It helps prevent unexpected or invalid data from being processed",
+                   "It makes every password stronger",
+                   "It removes the need for testing" };
+    }
 
-    std::cout << "\nEnter your answer: ";
+    int answer = 0;
+    if (!options.empty())
+    {
+        // Find the correct original index using Challenge's own answer key.
+        int correctIndex = -1;
+        for (int i = 0; i < static_cast<int>(options.size()); ++i)
+        {
+            if (selectedChallenge->IsCorrectAnswer(i + 1))
+            {
+                correctIndex = i;
+                break;
+            }
+        }
+        if (correctIndex < 0)
+        {
+            throw std::runtime_error("Challenge answer key is invalid.");
+        }
 
-    int answer = GetValidatedChoice(
-        1,
-        selectedChallenge->GetOptionCount());
+        std::vector<int> order = ShuffleAnswerPositions(
+            "Challenge: " + selectedChallenge->GetTitle(),
+            static_cast<int>(options.size()), correctIndex);
+        std::cout << "\n";
+        // The question wording matches the challenge defined in the constructor.
+        if (selectedChallenge->GetTitle() == "Authorization Basics")
+            std::cout << "1. Before testing a website for vulnerabilities, what should you verify first?\n";
+        else if (selectedChallenge->GetTitle() == "Scope Basics")
+            std::cout << "1. What should you do if a website or domain is not listed as an authorized target?\n";
+        else
+            std::cout << "1. Why is input validation important?\n";
+
+        std::cout << "\n";
+        for (int j = 0; j < static_cast<int>(options.size()); ++j)
+        {
+            std::cout << "   " << static_cast<char>('a' + j)
+                << ". " << options[order[j]] << "\n";
+        }
+        std::cout << "\n";
+        int selectedPosition = ReadLetterAnswer(static_cast<int>(options.size()));
+        answer = order[selectedPosition] + 1;
+    }
+    else
+    {
+        // Compatibility fallback for future challenges not yet migrated.
+        selectedChallenge->DisplayQuestion();
+        std::cout << "\nEnter your answer: ";
+        answer = GetValidatedChoice(1, selectedChallenge->GetOptionCount());
+    }
 
     if (selectedChallenge->IsCorrectAnswer(answer))
     {
@@ -1280,17 +1528,25 @@ void TrainerApp::Pause() const
 
 void TrainerApp::Run()
 {
-    while (running)
+    try
     {
-        DisplayMenu();
-        int choice = GetValidatedChoice(1, 9);
-        HandleChoice(choice);
-
-        // These screens handle their own pauses.
-        if (running && choice != 2 && choice != 3 && choice != 6)
+        while (running)
         {
-            Pause();
+            DisplayMenu();
+            int choice = GetValidatedChoice(1, 9);
+            HandleChoice(choice);
+
+            // These screens handle their own pauses.
+            if (running && choice != 2 && choice != 3 && choice != 6)
+            {
+                Pause();
+            }
         }
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cout << "\n" << error.what() << " Exiting BugBountyTrainer.\n";
+        running = false;
     }
 }
 
@@ -1420,10 +1676,10 @@ void TrainerApp::SaveProgress()
 
     // Save researcher information and challenges.
     if (SaveManager::SaveProgress(
-    researcher,
-    challenges,
-    learningModules,
-    filename))
+        researcher,
+        challenges,
+        learningModules,
+        filename))
     {
         std::cout << "\nProgress saved successfully!\n";
     }
@@ -1447,10 +1703,10 @@ void TrainerApp::LoadProgress()
 
     // Restore researcher information and challenges.
     if (SaveManager::LoadProgress(
-    researcher,
-    challenges,
-    learningModules,
-    filename))
+        researcher,
+        challenges,
+        learningModules,
+        filename))
     {
         std::cout << "\nProgress restored successfully!\n";
     }
