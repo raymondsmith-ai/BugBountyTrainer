@@ -686,9 +686,10 @@ void TrainerApp::DisplayMenu() const
     std::cout << "7. Save Progress\n";
     std::cout << "8. Load Progress\n";
     std::cout << "9. Exit\n";
+    std::cout << "10. SQL Fundamentals (Stage 1)\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 9: ";
+    std::cout << "Enter a number from 1 to 10: ";
 }
 
 // ====================================
@@ -1865,6 +1866,9 @@ void TrainerApp::HandleChoice(int choice)
     case 8:
         LoadProgress();
         break;
+    case 10:
+        sqlFundamentals.Run();
+        break;
     case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
@@ -2080,11 +2084,11 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 9);
+            int choice = GetValidatedChoice(1, 10);
             HandleChoice(choice);
 
             // These screens handle their own pauses.
-            if (running && choice != 2 && choice != 3 && choice != 6)
+            if (running && choice != 2 && choice != 3 && choice != 6 && choice != 10)
             {
                 Pause();
             }
@@ -2246,4 +2250,5 @@ void TrainerApp::LoadProgress()
         std::cout << "\nUnable to load progress.\n";
     }
 }
+
 

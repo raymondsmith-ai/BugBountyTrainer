@@ -7,6 +7,7 @@
 #include "Challenge.h"
 #include "LearningModule.h"
 #include "Lab.h"
+#include "SQLFundamentals.h"
 
 class TrainerApp
 {
@@ -16,6 +17,8 @@ private:
     std::vector<Challenge> challenges;
     std::vector<LearningModule> learningModules;
     std::vector<Lab> labs;
+
+    SQLFundamentals sqlFundamentals;
 
     bool running;
 
