@@ -35,6 +35,8 @@ public:
     std::string GetDescription() const;
     std::string GetCategory() const;
     std::string GetDifficulty() const;
+    const std::string& GetQuestion() const;
+    const std::vector<std::string>& GetAnswerOptions() const;
 
     int GetXPReward() const;
     int GetOptionCount() const;

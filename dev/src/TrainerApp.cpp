@@ -1347,77 +1347,40 @@ void TrainerApp::StartTraining()
         return;
     }
 
-    // Existing three challenges have known answer text in the constructor.
-    // Keep their original answer indices for Challenge::IsCorrectAnswer.
-    // Future challenges should expose their options via Challenge getters,
-    // so they can use the same helper without adding another mapping here.
-    std::vector<std::string> options;
-    if (selectedChallenge->GetTitle() == "Authorization Basics")
+    const std::vector<std::string>& options =
+        selectedChallenge->GetAnswerOptions();
+
+    // Find the answer's original position before shuffling its display order.
+    int correctIndex = -1;
+    for (int i = 0; i < static_cast<int>(options.size()); ++i)
     {
-        options = { "The website has a login page",
-                   "You have authorization to test the target",
-                   "The website uses HTTPS" };
-    }
-    else if (selectedChallenge->GetTitle() == "Scope Basics")
-    {
-        options = { "Test it anyway",
-                   "Do not test it unless you receive authorization",
-                   "Test only the login page" };
-    }
-    else if (selectedChallenge->GetTitle() == "Input Validation Basics")
-    {
-        options = { "It helps prevent unexpected or invalid data from being processed",
-                   "It makes every password stronger",
-                   "It removes the need for testing" };
+        if (selectedChallenge->IsCorrectAnswer(i + 1))
+        {
+            correctIndex = i;
+            break;
+        }
     }
 
-    int answer = 0;
-    if (!options.empty())
+    if (correctIndex < 0)
     {
-        // Find the correct original index using Challenge's own answer key.
-        int correctIndex = -1;
-        for (int i = 0; i < static_cast<int>(options.size()); ++i)
-        {
-            if (selectedChallenge->IsCorrectAnswer(i + 1))
-            {
-                correctIndex = i;
-                break;
-            }
-        }
-        if (correctIndex < 0)
-        {
-            throw std::runtime_error("Challenge answer key is invalid.");
-        }
-
-        std::vector<int> order = ShuffleAnswerPositions(
-            "Challenge: " + selectedChallenge->GetTitle(),
-            static_cast<int>(options.size()), correctIndex);
-        std::cout << "\n";
-        // The question wording matches the challenge defined in the constructor.
-        if (selectedChallenge->GetTitle() == "Authorization Basics")
-            std::cout << "1. Before testing a website for vulnerabilities, what should you verify first?\n";
-        else if (selectedChallenge->GetTitle() == "Scope Basics")
-            std::cout << "1. What should you do if a website or domain is not listed as an authorized target?\n";
-        else
-            std::cout << "1. Why is input validation important?\n";
-
-        std::cout << "\n";
-        for (int j = 0; j < static_cast<int>(options.size()); ++j)
-        {
-            std::cout << "   " << static_cast<char>('a' + j)
-                << ". " << options[order[j]] << "\n";
-        }
-        std::cout << "\n";
-        int selectedPosition = ReadLetterAnswer(static_cast<int>(options.size()));
-        answer = order[selectedPosition] + 1;
+        throw std::runtime_error("Challenge answer key is invalid.");
     }
-    else
+
+    const std::vector<int> order = ShuffleAnswerPositions(
+        "Challenge: " + selectedChallenge->GetTitle(),
+        static_cast<int>(options.size()),
+        correctIndex);
+
+    std::cout << "\n1. " << selectedChallenge->GetQuestion() << "\n\n";
+    for (int i = 0; i < static_cast<int>(options.size()); ++i)
     {
-        // Compatibility fallback for future challenges not yet migrated.
-        selectedChallenge->DisplayQuestion();
-        std::cout << "\nEnter your answer: ";
-        answer = GetValidatedChoice(1, selectedChallenge->GetOptionCount());
+        std::cout << "   " << static_cast<char>('a' + i)
+            << ". " << options[order[i]] << '\n';
     }
+    std::cout << '\n';
+
+    int selectedPosition = ReadLetterAnswer(static_cast<int>(options.size()));
+    int answer = order[selectedPosition] + 1;
 
     if (selectedChallenge->IsCorrectAnswer(answer))
     {
