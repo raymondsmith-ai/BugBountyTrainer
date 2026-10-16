@@ -12,63 +12,48 @@ class TrainerApp
 {
 private:
     Researcher researcher;
-    // ====================================
-// Save and Load Functions
-// ====================================
 
-// Saves the researcher's progress.
-    void SaveProgress();
-
-    // Loads previously saved progress.
-    void LoadProgress();
-
-    // Stores training challenges.
     std::vector<Challenge> challenges;
-
-    // Stores learning modules.
     std::vector<LearningModule> learningModules;
-
-    // Stores hands-on labs.
     std::vector<Lab> labs;
 
     bool running;
 
-    // Main menu functions.
+    std::vector<std::string> GetCategories() const;
+
+    // Startup menu.
+    void DisplayStartupMenu() const;
+    void OpenOptions();
+    bool StartSession();
+
+    // Main menu.
     void DisplayMenu() const;
     void HandleChoice(int choice);
 
-    // Learning path functions.
+    // Learning path.
     void DisplayLearningPath() const;
     void OpenLearningPath();
 
-    // Hands-on lab functions.
+    // Hands-on labs.
     void DisplayLabs() const;
     void OpenHandsOnLabs();
+    void RunTerminalInvestigationLab(Lab& lab);
 
-    void RunTerminalInvestigationLab(
-        Lab& lab);
-
-    // ====================================
-    // Training Functions
-    // ====================================
-
-    // Displays all available challenges.
+    // Challenges.
     void DisplayChallenges() const;
-
-    // Starts the existing training system.
     void StartTraining();
 
-    // Displays available vulnerability categories.
+    // Vulnerability categories.
     void DisplayCategories() const;
-
-    // Allows researchers to select a category.
     void BrowseCategories();
-
-    // Displays challenges in a selected category.
     void DisplayChallengesByCategory(
         const std::string& selectedCategory) const;
 
-    // Input and usability functions.
+    // Save and load.
+    void SaveProgress();
+    void LoadProgress();
+
+    // Input and utility functions.
     int GetValidatedChoice(
         int minimum,
         int maximum) const;
@@ -76,8 +61,7 @@ private:
     void Pause() const;
 
 public:
-    TrainerApp(
-        const std::string& researcherName);
+    explicit TrainerApp(const std::string& researcherName);
 
     void Run();
 };

@@ -9,10 +9,58 @@
 #include <random>
 #include <unordered_map>
 #include <numeric>
+#include <cctype>
+#include <filesystem>
 // Shared assessment helpers. The last correct-answer position is remembered
 // for each question during this application session, including retakes.
 namespace
 {
+    std::string GenerateValidationCode()
+    {
+        static constexpr char characters[] =
+            "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        static std::mt19937 generator(std::random_device{}());
+        std::uniform_int_distribution<int> distribution(
+            0, static_cast<int>(sizeof(characters) - 2));
+
+        std::string code = "BBT-";
+        for (int i = 0; i < 8; ++i)
+        {
+            if (i == 4)
+            {
+                code += '-';
+            }
+            code += characters[distribution(generator)];
+        }
+        return code;
+    }
+
+    std::string SaveFilenameFor(const std::string& name)
+    {
+        std::string safeName;
+        for (unsigned char ch : name)
+        {
+            if (std::isalnum(ch) || ch == '-' || ch == '_')
+            {
+                safeName += static_cast<char>(ch);
+            }
+            else if (safeName.empty() || safeName.back() != '_')
+            {
+                safeName += '_';
+            }
+        }
+
+        while (!safeName.empty() && safeName.back() == '_')
+        {
+            safeName.pop_back();
+        }
+        if (safeName.empty())
+        {
+            safeName = "Researcher";
+        }
+        return "researcher_save_" + safeName + ".txt";
+    }
+
     std::mt19937& AssessmentRng()
     {
         static std::mt19937 rng(std::random_device{}());
@@ -886,6 +934,7 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
 {
     bool labRunning = true;
     std::string command;
+    const std::string validationCode = GenerateValidationCode();
 
     lab.DisplayLab();
 
@@ -998,7 +1047,7 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
 
             std::cout << "\nBUG BOUNTY TRAINER\n";
             std::cout << "Authorized Training File\n";
-            std::cout << "Validation Code: BBT-ALPHA-101\n";
+            std::cout << "Validation Code: " << validationCode << "\n";
 
             if (!lab.IsObjectiveCompleted(3))
             {
@@ -1042,7 +1091,7 @@ void TrainerApp::RunTerminalInvestigationLab(Lab& lab)
                 std::string submittedCode = command.substr(7);
 
                 // Compare against the training file code.
-                if (submittedCode == "BBT-ALPHA-101")
+                if (submittedCode == validationCode)
                 {
                     lab.CompleteObjective(4);
 
@@ -1526,10 +1575,156 @@ void TrainerApp::Pause() const
 // Run Application
 // ====================================
 
+void TrainerApp::DisplayStartupMenu() const
+{
+    std::cout << "\n====================================\n";
+    std::cout << "        BUG BOUNTY TRAINER\n";
+    std::cout << "====================================\n";
+    std::cout << "1. New User\n";
+    std::cout << "2. Load Saved Progress\n";
+    std::cout << "3. Options\n";
+    std::cout << "4. Exit\n";
+    std::cout << "====================================\n";
+}
+
+void TrainerApp::OpenOptions()
+{
+    std::cout << "\n====================================\n";
+    std::cout << "              OPTIONS\n";
+    std::cout << "====================================\n";
+    std::cout << "Input validation: Enabled\n";
+    std::cout << "Saved progress is stored in the application folder.\n";
+    Pause();
+}
+
+bool TrainerApp::StartSession()
+{
+    const std::string prefix = "researcher_save_";
+    const std::string suffix = ".txt";
+
+    while (running)
+    {
+        DisplayStartupMenu();
+        std::cout << "Choose an option: ";
+        int choice = GetValidatedChoice(1, 4);
+
+        if (choice == 1)
+        {
+            std::string name;
+            while (true)
+            {
+                std::cout << "\nEnter your researcher name: ";
+                if (!std::getline(std::cin, name))
+                {
+                    throw std::runtime_error("Input stream closed.");
+                }
+                if (name.find_first_not_of(" \t") != std::string::npos)
+                {
+                    break;
+                }
+                std::cout << "Name cannot be empty.\n";
+            }
+
+            researcher = Researcher(name);
+            std::cout << "\nNew researcher created successfully.\n";
+            Pause();
+            return true;
+        }
+
+        if (choice == 2)
+        {
+            std::vector<std::filesystem::path> saveFiles;
+            std::error_code error;
+            for (const auto& entry : std::filesystem::directory_iterator(".", error))
+            {
+                if (!entry.is_regular_file(error))
+                {
+                    continue;
+                }
+
+                const std::string filename = entry.path().filename().string();
+                const bool isLegacySave = filename == "researcher_save.txt";
+                const bool isUserSave =
+                    filename.rfind(prefix, 0) == 0 &&
+                    filename.size() > prefix.size() + suffix.size() &&
+                    filename.compare(filename.size() - suffix.size(),
+                        suffix.size(), suffix) == 0;
+                if (isLegacySave || isUserSave)
+                {
+                    saveFiles.push_back(entry.path());
+                }
+            }
+            std::sort(saveFiles.begin(), saveFiles.end());
+
+            if (saveFiles.empty())
+            {
+                std::cout << "\nNo saved users found.\n";
+                Pause();
+                continue;
+            }
+
+            std::cout << "\nAvailable saved users:\n";
+            for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
+            {
+                const std::string filename =
+                    saveFiles[i].filename().string();
+                std::string displayName;
+
+                if (filename == "researcher_save.txt")
+                {
+                    displayName = "Previous save";
+                }
+                else
+                {
+                    displayName = filename.substr(prefix.size(),
+                        filename.size() - prefix.size() - suffix.size());
+                    std::replace(displayName.begin(), displayName.end(), '_', ' ');
+                }
+                std::cout << i + 1 << ". " << displayName << '\n';
+            }
+            std::cout << "0. Return to startup menu\n";
+            std::cout << "Choose a saved user: ";
+            int saveChoice = GetValidatedChoice(
+                0, static_cast<int>(saveFiles.size()));
+            if (saveChoice == 0)
+            {
+                continue;
+            }
+
+            const std::string filename = saveFiles[saveChoice - 1].string();
+            if (SaveManager::LoadProgress(
+                researcher, challenges, learningModules, filename))
+            {
+                std::cout << "\nProgress loaded for "
+                    << researcher.GetName() << ".\n";
+                Pause();
+                return true;
+            }
+            std::cout << "\nUnable to load that save file.\n";
+            Pause();
+        }
+        else if (choice == 3)
+        {
+            OpenOptions();
+        }
+        else if (choice == 4)
+        {
+            running = false;
+            return false;
+        }
+    }
+    return false;
+}
+
 void TrainerApp::Run()
 {
     try
     {
+        if (!StartSession())
+        {
+            return;
+        }
+
         while (running)
         {
             DisplayMenu();
@@ -1550,6 +1745,25 @@ void TrainerApp::Run()
     }
 }
 
+std::vector<std::string> TrainerApp::GetCategories() const
+{
+    std::vector<std::string> categories;
+
+    for (const Challenge& challenge : challenges)
+    {
+        const std::string category = challenge.GetCategory();
+
+        if (std::find(
+            categories.begin(),
+            categories.end(),
+            category) == categories.end())
+        {
+            categories.push_back(category);
+        }
+    }
+
+    return categories;
+}
 // ====================================
 // Display Vulnerability Categories
 // ====================================
@@ -1559,25 +1773,7 @@ void TrainerApp::DisplayCategories() const
     std::cout << "\n====================================\n";
     std::cout << "       VULNERABILITY CATEGORIES\n";
     std::cout << "====================================\n";
-    std::vector<std::string> categories;
-
-    for (const Challenge& challenge : challenges)
-    {
-        const std::string category = challenge.GetCategory();
-        bool found = false;
-        for (const std::string& existing : categories)
-        {
-            if (existing == category)
-            {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-        {
-            categories.push_back(category);
-        }
-    }
+    const std::vector<std::string> categories = GetCategories();
 
     for (int i = 0; i < static_cast<int>(categories.size()); ++i)
     {
@@ -1624,24 +1820,7 @@ void TrainerApp::DisplayChallengesByCategory(const std::string& selectedCategory
 
 void TrainerApp::BrowseCategories()
 {
-    std::vector<std::string> categories;
-    for (const Challenge& challenge : challenges)
-    {
-        const std::string category = challenge.GetCategory();
-        bool found = false;
-        for (const std::string& existing : categories)
-        {
-            if (existing == category)
-            {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-        {
-            categories.push_back(category);
-        }
-    }
+    const std::vector<std::string> categories = GetCategories();
 
     bool browsing = true;
     while (browsing)
@@ -1668,7 +1847,7 @@ void TrainerApp::BrowseCategories()
 
 void TrainerApp::SaveProgress()
 {
-    const std::string filename = "researcher_save.txt";
+    const std::string filename = SaveFilenameFor(researcher.GetName());
 
     std::cout << "\n====================================\n";
     std::cout << "          SAVE PROGRESS\n";
@@ -1695,7 +1874,7 @@ void TrainerApp::SaveProgress()
 
 void TrainerApp::LoadProgress()
 {
-    const std::string filename = "researcher_save.txt";
+    const std::string filename = SaveFilenameFor(researcher.GetName());
 
     std::cout << "\n====================================\n";
     std::cout << "          LOAD PROGRESS\n";
