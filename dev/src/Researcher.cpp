@@ -19,6 +19,10 @@ std::string Researcher::GetName() const
 {
     return name;
 }
+void Researcher::SetName(const std::string& newName)
+{
+    name = newName;
+}
 
 // Returns the researcher's current level.
 int Researcher::GetLevel() const

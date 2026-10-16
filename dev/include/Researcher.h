@@ -16,6 +16,7 @@ private:
     int availableXP;
 
 public:
+  
     // Constructor.
     Researcher(const std::string& researcherName);
 
@@ -27,6 +28,7 @@ public:
     int GetXP() const;
 
     int GetTotalXP() const;
+    void SetName(const std::string& newName);
     int GetAvailableXP() const;
 
     // Researcher functions.

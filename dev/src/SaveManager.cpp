@@ -101,6 +101,8 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
+    researcher.SetName(savedName);
+
     // Read researcher progress.
     if (!(file >> savedLevel
                >> savedTotalXP
