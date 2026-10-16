@@ -185,6 +185,268 @@ namespace
             std::cout << "Invalid answer. Please enter a valid letter.\n";
         }
     }
+
+    struct LessonQuestion
+    {
+        std::string prompt;
+        std::array<std::string, 3> options;
+        int correctIndex;
+    };
+
+    struct ModuleLesson
+    {
+        int moduleIndex;
+        std::string title;
+        std::string lesson;
+        std::string scenario;
+        std::vector<LessonQuestion> questions;
+    };
+
+    const ModuleLesson* FindModuleLesson(int moduleIndex)
+    {
+        // Every assessment uses the same runner; content belongs in this table.
+        static const std::vector<ModuleLesson> lessons =
+        {
+            {
+                3,
+                "Networking Fundamentals",
+                R"(A hostname is a readable name; an IP address identifies a network endpoint.
+DNS can resolve a hostname to an IP address.
+A port identifies a service endpoint on a host. An IP address and port are
+different pieces of information.
+TCP provides a reliable, ordered byte stream. UDP carries datagrams without
+guaranteeing delivery or order.
+Common defaults: HTTPS uses TCP port 443; SSH uses TCP port 22; DNS commonly
+uses port 53 over UDP or TCP. A port number alone does not prove service identity.
+Before interacting with a service, confirm both the target and activity are
+authorized. An observed service is not automatically an authorized target.
+)",
+                R"(SIMULATED SERVICE REPORT
+Hostname: portal.training.test
+Address: 192.0.2.10
+Services: 22/tcp SSH, 443/tcp HTTPS, 53/udp DNS
+Lab scope: portal.training.test, HTTPS on port 443 only.
+
+Activity: identify the hostname, address, permitted service, and transport.
+Use this report to answer the questions. No network requests are made.
+)",
+                {
+                    {"Which service translates a hostname to an IP address?",
+                        {"SSH", "DNS", "HTTPS"}, 1},
+                    {"Which service is explicitly permitted by this lab's scope?",
+                        {"SSH on port 22", "All discovered services", "HTTPS on port 443"}, 2},
+                    {"Which transport provides a reliable, ordered byte stream?",
+                        {"TCP", "UDP", "DNS"}, 0},
+                    {"What does port 443 identify in this report?",
+                        {"The researcher's identity", "The host's physical location", "The HTTPS service endpoint"}, 2},
+                    {"What should you assume about delivery of a UDP datagram?",
+                        {"Delivery and ordering are not guaranteed", "It always arrives before TCP", "It is encrypted automatically"}, 0}
+                }
+            },
+            {
+                4,
+                "Web Fundamentals",
+                R"(HTTP follows a request/response model. A request includes a method, a path,
+headers, and sometimes a body. The response includes a status code and content.
+GET requests retrieve a representation; POST requests submit data for processing.
+Cookies let browsers send stored values back to a server. A session cookie may
+identify a signed-in session and should be treated as sensitive.
+A 200 response indicates success. A 401 response means valid authentication
+credentials are missing or unacceptable. A 403 response means access is refused.
+HTTPS protects data in transit; the server must still check permissions.
+Changing an identifier in a URL must never replace server-side authorization.
+)",
+                R"(SIMULATED WEB EXCHANGE
+Request:
+GET /account HTTP/1.1
+Host: portal.training.test
+Cookie: session=demo-session-value
+
+Response:
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+The demonstration session value is fictional.
+Activity: identify the method, path, state-carrying header, and response meaning.
+)",
+                {
+                    {"Which HTTP method appears in the request?",
+                        {"POST", "GET", "DELETE"}, 1},
+                    {"Which path is being requested?",
+                        {"/account", "portal.training.test", "text/html"}, 0},
+                    {"Which header carries the demonstration session value?",
+                        {"Content-Type", "Host", "Cookie"}, 2},
+                    {"What does HTTP 401 indicate?",
+                        {"The page moved permanently", "Valid authentication credentials are required", "The request definitely succeeded"}, 1},
+                    {"Does HTTPS remove the need for server-side permission checks?",
+                        {"Yes, encryption proves ownership", "Yes, cookies grant access to every account", "No, authorization must still be enforced"}, 2}
+                }
+            },
+            {
+                5,
+                "Reconnaissance",
+                R"(Reconnaissance collects and organizes information before validation.
+Passive research uses existing information, such as published documentation.
+Active reconnaissance interacts with a target and requires permission for that
+target and activity. Public visibility does not itself grant testing permission.
+Record the source, observation, and time. Separate confirmed facts from guesses.
+An asset inventory can include hostnames, services, owners, and scope status.
+A third-party host linked from an authorized site is not automatically in scope.
+Work from explicit scope, and request clarification when ownership is uncertain.
+)",
+                R"(SIMULATED ASSET INVENTORY
+portal.training.test | HTTPS | Listed in scope
+api.training.test    | HTTPS | Listed in scope
+cdn.vendor.test      | HTTPS | Third-party service, not listed in scope
+
+Evidence: API documentation lists /v1/profile as an endpoint.
+No request to /v1/profile has been made.
+
+Activity: distinguish permitted assets, documented observations, and assumptions.
+)",
+                {
+                    {"Which asset should be excluded unless separately authorized?",
+                        {"api.training.test", "cdn.vendor.test", "portal.training.test"}, 1},
+                    {"Which example is passive research?",
+                        {"Reading already-published API documentation", "Sending test payloads", "Running a service scan"}, 0},
+                    {"What can you conclude from the documented /v1/profile endpoint?",
+                        {"It is vulnerable", "It exposes every user's profile", "It is documented; its behavior is not yet verified"}, 2},
+                    {"What makes a reconnaissance note useful?",
+                        {"A guess with no source", "A source, observation, and recorded time", "Only the number of URLs collected"}, 1},
+                    {"Before actively testing a newly discovered hostname, what comes first?",
+                        {"Confirm explicit scope and permitted activities", "Assume related names are authorized", "Test it before writing it down"}, 0}
+                }
+            },
+            {
+                6,
+                "Web Vulnerability Fundamentals",
+                R"(Authentication establishes who a user is. Authorization determines what that
+user may access. Both must be enforced on the server.
+An insecure direct object reference can occur when a server accepts a record
+identifier without checking whether the requesting user may access that record.
+For SQL queries, parameterized statements separate values from query structure.
+Input validation is useful, but does not replace parameterized queries.
+Cross-site scripting prevention includes context-appropriate output encoding;
+treat untrusted text as data rather than executable browser content.
+Validate suspected issues using authorized test accounts and minimal evidence.
+A suspicious response alone is not proof of a vulnerability.
+)",
+                R"(SIMULATED OWNERSHIP CHECK
+Test account A owns record 101.
+Test account B owns record 202.
+Both accounts are provided by this training lab.
+
+The server receives an authenticated request for a record identifier.
+Activity: choose the expected permission check and appropriate prevention.
+These questions describe a simulation; do not access real users' records.
+)",
+                {
+                    {"Before returning record 202 to account A, what must the server check?",
+                        {"Only that A is signed in", "That the URL contains a number", "That A is authorized to access record 202"}, 2},
+                    {"What is the main purpose of authentication?",
+                        {"Establish the user's identity", "Grant access to every record", "Remove the need for authorization"}, 0},
+                    {"Which approach separates SQL values from query structure?",
+                        {"Concatenating user input", "Parameterized statements", "Hiding the database error message"}, 1},
+                    {"Which helps prevent untrusted text becoming executable browser content?",
+                        {"A longer page title", "Context-appropriate output encoding", "Only changing the URL"}, 1},
+                    {"How should an ownership-check finding be validated in this lab?",
+                        {"Use unrelated real accounts", "Download as much data as possible", "Use the provided accounts and minimal evidence"}, 2}
+                }
+            },
+            {
+                7,
+                "Bug Bounty Methodology",
+                R"(A repeatable workflow starts with scope and rules, then reconnaissance,
+a testable hypothesis, minimal authorized validation, and reporting.
+Keep notes of actions and observations so someone else can reproduce the result.
+Separate expected behavior, actual behavior, and supported security impact.
+A useful report includes the affected component, prerequisites, numbered steps,
+expected and actual results, minimal evidence, impact, and a suggested remedy.
+Redact session tokens, passwords, and unrelated personal data from evidence.
+Avoid duplicate or unverified reports; a tool alert is a lead, not a confirmed bug.
+When a test risks exceeding scope or causing harm, stop and seek clarification.
+)",
+                R"(SIMULATED REPORT DRAFT
+Title: Account A can read account B's lab record
+Prerequisite: Two instructor-provided test accounts
+Observation: An authorized lab test returned B's record to A
+Missing details: exact steps, expected behavior, minimal evidence, and impact
+
+Activity: improve reproducibility and support the report's claims.
+Keep all reproduction steps limited to the fictional training environment.
+)",
+                {
+                    {"What should happen before reconnaissance and validation?",
+                        {"Confirm scope and program rules", "Publish a report", "Choose a reward amount"}, 0},
+                    {"Which addition most improves reproducibility?",
+                        {"More dramatic wording", "Prerequisites and numbered steps with expected and actual results", "A claim that every account is affected"}, 1},
+                    {"How should session tokens appear in shared report evidence?",
+                        {"Always publish their full values", "Use them as the report title", "Redact them unless a secure agreed process requires them"}, 2},
+                    {"What does an automated scanner alert establish by itself?",
+                        {"A confirmed high-impact vulnerability", "A lead requiring authorized validation", "Permission to test related systems"}, 1},
+                    {"Which impact statement is strongest?",
+                        {"Every system is compromised", "The reward should be large", "The provided account could read another test account's record"}, 2}
+                }
+            }
+        };
+
+        for (const ModuleLesson& lesson : lessons)
+        {
+            if (lesson.moduleIndex == moduleIndex)
+            {
+                return &lesson;
+            }
+        }
+        return nullptr;
+    }
+
+    bool RunModuleLesson(const ModuleLesson& lesson)
+    {
+        std::cout << "\n====================================\n";
+        std::cout << lesson.title << '\n';
+        std::cout << "====================================\n\n";
+        std::cout << lesson.lesson << "\n" << lesson.scenario;
+        std::cout << "\nKNOWLEDGE ASSESSMENT\n";
+        std::cout << "Answer all " << lesson.questions.size()
+            << " questions correctly to complete this module.\n";
+
+        int correctAnswers = 0;
+        for (int i = 0; i < static_cast<int>(lesson.questions.size()); ++i)
+        {
+            const LessonQuestion& question = lesson.questions[i];
+            const std::vector<int> order = ShuffleAnswerPositions(
+                lesson.title + " Q" + std::to_string(i),
+                static_cast<int>(question.options.size()),
+                question.correctIndex);
+
+            std::cout << "\n" << i + 1 << ". " << question.prompt << "\n\n";
+            for (int option = 0; option < static_cast<int>(order.size()); ++option)
+            {
+                std::cout << "   " << static_cast<char>('a' + option) << ". "
+                    << question.options[order[option]] << '\n';
+            }
+            std::cout << '\n';
+
+            const int selectedPosition =
+                ReadLetterAnswer(static_cast<int>(order.size()));
+            if (order[selectedPosition] == question.correctIndex)
+            {
+                ++correctAnswers;
+            }
+        }
+
+        std::cout << "\nAssessment Score: " << correctAnswers
+            << "/" << lesson.questions.size() << '\n';
+        const bool passed =
+            correctAnswers == static_cast<int>(lesson.questions.size());
+        if (!passed)
+        {
+            std::cout << "Assessment not passed. No XP awarded.\n";
+            std::cout << "Review the lesson and reopen this module to try again.\n";
+        }
+        return passed;
+    }
+
 }
 
 // ====================================
@@ -876,9 +1138,32 @@ void TrainerApp::OpenLearningPath()
         }
         else
         {
-            std::cout
-                << "Required training activities for this module "
-                << "are still being developed.\n";
+            const ModuleLesson* lesson = FindModuleLesson(moduleIndex);
+            if (lesson == nullptr)
+            {
+                std::cout << "No training activity is assigned to this module.\n";
+            }
+            else if (RunModuleLesson(*lesson) && !selectedModule->IsCompleted())
+            {
+                selectedModule->CompleteModule();
+                if (selectedModule->IsCompleted())
+                {
+                    researcher.AddXP(selectedModule->GetXPReward());
+                    std::cout << "\n[MODULE COMPLETE] "
+                        << selectedModule->GetTitle() << "!\n";
+                    std::cout << "XP Earned: " << selectedModule->GetXPReward() << '\n';
+
+                    if (moduleIndex + 1 < static_cast<int>(learningModules.size()))
+                    {
+                        std::cout << learningModules[moduleIndex + 1].GetTitle()
+                            << " can now be unlocked when its requirements are met.\n";
+                    }
+                    else
+                    {
+                        std::cout << "You completed the current learning path!\n";
+                    }
+                }
+            }
         }
         Pause();
     }
@@ -1961,3 +2246,4 @@ void TrainerApp::LoadProgress()
         std::cout << "\nUnable to load progress.\n";
     }
 }
+
