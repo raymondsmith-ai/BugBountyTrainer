@@ -101,8 +101,6 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    researcher.SetName(savedName);
-
     // Read researcher progress.
     if (!(file >> savedLevel
                >> savedTotalXP
@@ -179,6 +177,9 @@ bool SaveManager::LoadProgress(
         std::cout << "\nInvalid researcher progress.\n";
         return false;
     }
+
+    // Apply the saved name only after the entire file and progression validate.
+    researcher.SetName(savedName);
 
     // Restore challenges without awarding XP.
     for (std::size_t i = 0; i < challengeCount; i++)
