@@ -11,10 +11,74 @@
 #include <numeric>
 #include <cctype>
 #include <filesystem>
+#include <fstream>
 // Shared assessment helpers. The last correct-answer position is remembered
 // for each question during this application session, including retakes.
 namespace
 {
+    bool HasSupportedSaveFormat(const std::filesystem::path& path)
+    {
+        std::ifstream file(path);
+        std::string version;
+        return std::getline(file, version) && version == "BBT_SAVE_V2";
+    }
+
+    std::vector<std::filesystem::path> FindSaveFiles(bool supportedOnly)
+    {
+        const std::string prefix = "researcher_save_";
+        const std::string suffix = ".txt";
+        std::vector<std::filesystem::path> saveFiles;
+        std::error_code error;
+        std::filesystem::directory_iterator entry(".", error);
+        const std::filesystem::directory_iterator end;
+
+        while (!error && entry != end)
+        {
+            const std::filesystem::path path = entry->path();
+            if (entry->is_regular_file(error) && !entry->is_symlink(error))
+            {
+                const std::string filename = path.filename().string();
+                const bool isLegacySave = filename == "researcher_save.txt";
+                const bool isUserSave =
+                    filename.rfind(prefix, 0) == 0 &&
+                    filename.size() > prefix.size() + suffix.size() &&
+                    filename.compare(filename.size() - suffix.size(),
+                        suffix.size(), suffix) == 0;
+
+                if ((isLegacySave || isUserSave) &&
+                    (!supportedOnly || HasSupportedSaveFormat(path)))
+                {
+                    saveFiles.push_back(path);
+                }
+            }
+            if (!error)
+            {
+                entry.increment(error);
+            }
+        }
+
+        if (error)
+        {
+            throw std::runtime_error("Unable to read the saved-user folder.");
+        }
+
+        std::sort(saveFiles.begin(), saveFiles.end());
+        return saveFiles;
+    }
+
+    std::string SavedUserLabel(const std::filesystem::path& path)
+    {
+        std::ifstream file(path);
+        std::string version;
+        std::string name;
+        if (std::getline(file, version) && version == "BBT_SAVE_V2" &&
+            std::getline(file, name) && !name.empty())
+        {
+            return name;
+        }
+        return path.filename().string() + " [unsupported or unreadable]";
+    }
+
     std::string GenerateValidationCode()
     {
         static constexpr char characters[] =
@@ -1546,7 +1610,8 @@ void TrainerApp::DisplayStartupMenu() const
     std::cout << "1. New User\n";
     std::cout << "2. Load Saved Progress\n";
     std::cout << "3. Options\n";
-    std::cout << "4. Exit\n";
+    std::cout << "4. Delete Saved User\n";
+    std::cout << "5. Exit\n";
     std::cout << "====================================\n";
 }
 
@@ -1559,112 +1624,145 @@ void TrainerApp::OpenOptions()
     std::cout << "Saved progress is stored in the application folder.\n";
     Pause();
 }
+bool TrainerApp::SelectSavedUser()
+{
+    const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(true);
 
+    if (saveFiles.empty())
+    {
+        std::cout << "\nNo supported saved users found.\n";
+        Pause();
+        return false;
+    }
+
+    std::cout << "\nAvailable saved users:\n";
+    for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
+    {
+        std::cout << i + 1 << ". " << SavedUserLabel(saveFiles[i]) << '\n';
+    }
+
+    std::cout << "0. Return to startup menu\n";
+    std::cout << "Choose a saved user: ";
+    int choice = GetValidatedChoice(0, static_cast<int>(saveFiles.size()));
+
+    if (choice == 0)
+    {
+        return false;
+    }
+
+    if (!SaveManager::LoadProgress(
+        researcher, challenges, learningModules, saveFiles[choice - 1].string()))
+    {
+        std::cout << "\nUnable to load that save file.\n";
+        Pause();
+        return false;
+    }
+
+    std::cout << "\nProgress loaded for " << researcher.GetName() << ".\n";
+    Pause();
+    return true;
+}
+
+void TrainerApp::DeleteSavedUser()
+{
+    const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(false);
+
+    if (saveFiles.empty())
+    {
+        std::cout << "\nNo saved-user files found.\n";
+        Pause();
+        return;
+    }
+
+    std::cout << "\nSaved-user files available to delete:\n";
+    for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
+    {
+        std::cout << i + 1 << ". " << SavedUserLabel(saveFiles[i])
+            << " (" << saveFiles[i].filename().string() << ")\n";
+    }
+
+    std::cout << "0. Cancel\n";
+    std::cout << "Choose a saved user to delete: ";
+    int choice = GetValidatedChoice(0, static_cast<int>(saveFiles.size()));
+
+    if (choice == 0)
+    {
+        return;
+    }
+
+    const std::filesystem::path selectedFile = saveFiles[choice - 1];
+    std::cout << "\nDelete " << SavedUserLabel(selectedFile) << "?\n";
+    std::cout << "File: " << selectedFile.filename().string() << '\n';
+    std::cout << "This permanently removes this save file.\n";
+    std::cout << "1. Delete\n2. Cancel\nChoice: ";
+
+    if (GetValidatedChoice(1, 2) != 1)
+    {
+        std::cout << "\nDeletion cancelled.\n";
+        Pause();
+        return;
+    }
+
+    std::error_code error;
+    const bool deleted = std::filesystem::remove(selectedFile, error);
+
+    if (deleted && !error)
+    {
+        std::cout << "\nSaved user deleted successfully.\n";
+    }
+    else
+    {
+        std::cout << "\nUnable to delete that save file.\n";
+        if (error)
+        {
+            std::cout << error.message() << '\n';
+        }
+    }
+    Pause();
+}
 bool TrainerApp::StartSession()
 {
-    const std::string prefix = "researcher_save_";
-    const std::string suffix = ".txt";
-
     while (running)
     {
         DisplayStartupMenu();
+
         std::cout << "Choose an option: ";
-        int choice = GetValidatedChoice(1, 4);
+        int choice = GetValidatedChoice(1, 5);
 
         if (choice == 1)
         {
             std::string name;
+
             while (true)
             {
                 std::cout << "\nEnter your researcher name: ";
+
                 if (!std::getline(std::cin, name))
                 {
                     throw std::runtime_error("Input stream closed.");
                 }
+
                 if (name.find_first_not_of(" \t") != std::string::npos)
                 {
                     break;
                 }
+
                 std::cout << "Name cannot be empty.\n";
             }
 
             researcher = Researcher(name);
+
             std::cout << "\nNew researcher created successfully.\n";
             Pause();
+
             return true;
         }
-
-        if (choice == 2)
+        else if (choice == 2)
         {
-            std::vector<std::filesystem::path> saveFiles;
-            std::error_code error;
-            for (const auto& entry : std::filesystem::directory_iterator(".", error))
+            if (SelectSavedUser())
             {
-                if (!entry.is_regular_file(error))
-                {
-                    continue;
-                }
-
-                const std::string filename = entry.path().filename().string();
-                const bool isLegacySave = filename == "researcher_save.txt";
-                const bool isUserSave =
-                    filename.rfind(prefix, 0) == 0 &&
-                    filename.size() > prefix.size() + suffix.size() &&
-                    filename.compare(filename.size() - suffix.size(),
-                        suffix.size(), suffix) == 0;
-                if (isLegacySave || isUserSave)
-                {
-                    saveFiles.push_back(entry.path());
-                }
-            }
-            std::sort(saveFiles.begin(), saveFiles.end());
-
-            if (saveFiles.empty())
-            {
-                std::cout << "\nNo saved users found.\n";
-                Pause();
-                continue;
-            }
-
-            std::cout << "\nAvailable saved users:\n";
-            for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
-            {
-                const std::string filename =
-                    saveFiles[i].filename().string();
-                std::string displayName;
-
-                if (filename == "researcher_save.txt")
-                {
-                    displayName = "Previous save";
-                }
-                else
-                {
-                    displayName = filename.substr(prefix.size(),
-                        filename.size() - prefix.size() - suffix.size());
-                    std::replace(displayName.begin(), displayName.end(), '_', ' ');
-                }
-                std::cout << i + 1 << ". " << displayName << '\n';
-            }
-            std::cout << "0. Return to startup menu\n";
-            std::cout << "Choose a saved user: ";
-            int saveChoice = GetValidatedChoice(
-                0, static_cast<int>(saveFiles.size()));
-            if (saveChoice == 0)
-            {
-                continue;
-            }
-
-            const std::string filename = saveFiles[saveChoice - 1].string();
-            if (SaveManager::LoadProgress(
-                researcher, challenges, learningModules, filename))
-            {
-                std::cout << "\nProgress loaded for "
-                    << researcher.GetName() << ".\n";
-                Pause();
                 return true;
             }
-            std::cout << "\nUnable to load that save file.\n";
-            Pause();
         }
         else if (choice == 3)
         {
@@ -1672,12 +1770,18 @@ bool TrainerApp::StartSession()
         }
         else if (choice == 4)
         {
+            DeleteSavedUser();
+        }
+        else if (choice == 5)
+        {
             running = false;
             return false;
         }
     }
+
     return false;
 }
+
 
 void TrainerApp::Run()
 {

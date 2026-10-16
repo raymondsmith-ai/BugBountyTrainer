@@ -19,12 +19,14 @@ private:
 
     bool running;
 
-    std::vector<std::string> GetCategories() const;
-
     // Startup menu.
     void DisplayStartupMenu() const;
     void OpenOptions();
     bool StartSession();
+
+    // Saved-user management.
+    bool SelectSavedUser();
+    void DeleteSavedUser();
 
     // Main menu.
     void DisplayMenu() const;
@@ -39,17 +41,19 @@ private:
     void OpenHandsOnLabs();
     void RunTerminalInvestigationLab(Lab& lab);
 
-    // Challenges.
+    // Training challenges.
     void DisplayChallenges() const;
     void StartTraining();
 
     // Vulnerability categories.
+    std::vector<std::string> GetCategories() const;
     void DisplayCategories() const;
     void BrowseCategories();
+
     void DisplayChallengesByCategory(
         const std::string& selectedCategory) const;
 
-    // Save and load.
+    // Save and load current researcher progress.
     void SaveProgress();
     void LoadProgress();
 
