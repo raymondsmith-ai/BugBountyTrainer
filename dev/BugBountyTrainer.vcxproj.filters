@@ -33,7 +33,7 @@
     <ClCompile Include="src\Lab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SaveManager.cpp">
+    <ClCompile Include="src\SaveManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +53,10 @@
     <ClInclude Include="include\TrainerApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SaveManager.h">
+    <ClInclude Include="include\SaveManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SQLFundamentals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

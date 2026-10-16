@@ -4,15 +4,15 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <cctype>
 
-// C++ lesson and reasoning worksheet. This class does not execute SQL.
-// Docker remains the separate environment for real database exercises.
+// Query-reading lessons only. This class does not execute SQL.
+// Docker provides the separate environment for database exercises.
 class SQLFundamentals
 {
 private:
     bool guidedComplete = false;
     bool assessmentComplete = false;
+    bool rewardClaimed = false;
 
     struct Exercise
     {
@@ -26,13 +26,18 @@ private:
     static std::string Read(std::istream& input)
     {
         std::string line;
+
         if (!std::getline(input, line))
         {
             throw std::runtime_error("Input stream closed.");
         }
+
         const auto begin = line.find_first_not_of(" \t\r");
         const auto end = line.find_last_not_of(" \t\r");
-        return begin == std::string::npos ? "" : line.substr(begin, end - begin + 1);
+
+        return begin == std::string::npos
+            ? ""
+            : line.substr(begin, end - begin + 1);
     }
 
     static void Lesson(std::ostream& output)
@@ -76,6 +81,12 @@ The question mark is a SQLite value placeholder, not text concatenation.
 Here you practice reasoning about queries. The Docker website runs real SQLite
 queries. The existing website demonstrates a filtering bypass and its defense;
 it does not yet contain the full SQL injection course or verify Burp usage.
+
+7. SAVING PROGRESS
+Guided practice and assessment completion are included when you choose
+Save Progress from the main menu. This lesson does not automatically save.
+Passing earns a one-time 150 XP reward when returning to the main menu.
+This assessment does not complete an external lab.
 )";
     }
 
@@ -91,28 +102,45 @@ ID | Name              | Price | Published
 Enter a row count, 'hint' for help, or 'back' to leave.
 You must solve all three exercises in this visit to finish guided practice.
 )";
+
         const std::vector<Exercise> exercises =
         {
-            {"SELECT name FROM products;", "How many rows are returned?", "3",
+            {
+                "SELECT name FROM products;",
+                "How many rows are returned?",
+                "3",
                 "There is no WHERE condition to exclude any row.",
-                "All three rows qualify. Selecting fewer columns does not remove rows."},
-            {"SELECT name FROM products WHERE published = 1 AND price < 30;",
-                "How many rows are returned?", "1",
+                "All three rows qualify. Selecting fewer columns does not remove rows."
+            },
+            {
+                "SELECT name FROM products WHERE published = 1 AND price < 30;",
+                "How many rows are returned?",
+                "1",
                 "Check published AND price for every row. Both must be true.",
-                "Only Training Notebook qualifies. Keyboard costs 35; Adapter is hidden."},
-            {"SELECT name FROM products WHERE published = 1 OR price < 30;",
-                "How many rows are returned?", "3",
+                "Only Training Notebook qualifies. Keyboard costs 35; Adapter is hidden."
+            },
+            {
+                "SELECT name FROM products WHERE published = 1 OR price < 30;",
+                "How many rows are returned?",
+                "3",
                 "OR includes a row when either condition is true.",
-                "The two published products qualify, and the hidden Adapter costs under 30."}
+                "The two published products qualify, and the hidden Adapter costs under 30."
+            }
         };
+
         bool finished = true;
+
         for (const Exercise& exercise : exercises)
         {
             bool solved = false;
+
             while (!solved && finished)
             {
-                output << "\n" << exercise.query << "\n" << exercise.prompt << "\nAnswer: ";
+                output << '\n' << exercise.query << '\n'
+                    << exercise.prompt << "\nAnswer: ";
+
                 const std::string answer = Read(input);
+
                 if (answer == "back")
                 {
                     finished = false;
@@ -128,14 +156,23 @@ You must solve all three exercises in this visit to finish guided practice.
                 }
                 else
                 {
-                    output << "Not yet. Recheck each row, or type hint. No XP is changed.\n";
+                    output << "Not yet. Recheck each row, or type hint. "
+                        << "No XP is changed.\n";
                 }
             }
+
             if (!finished)
             {
                 break;
             }
         }
+
+        if (finished)
+        {
+            output << "\nGuided practice complete!\n"
+                << "Save from the main menu to keep this progress.\n";
+        }
+
         return finished;
     }
 
@@ -154,38 +191,64 @@ Predict results without hints. Enter a number or 'back' to leave.
 All three answers must be correct in one attempt. A failed attempt can be
 retried from the menu. This is a query-reading assessment, not proof of tool use.
 )";
+
         const std::vector<Exercise> questions =
         {
-            {"SELECT name FROM inventory WHERE category = 'Tools' AND published = 1 AND price <= 40;",
-                "How many rows are returned?", "2", "", ""},
-            {"SELECT name FROM inventory WHERE category = 'Tools' OR category = 'Books' AND published = 1;",
-                "How many rows are returned?", "4", "", ""},
-            {"SELECT name, price FROM inventory WHERE published = 1 AND price < 40;",
-                "What is the sum of the returned prices?", "35", "", ""}
+            {
+                "SELECT name FROM inventory WHERE category = 'Tools' AND published = 1 AND price <= 40;",
+                "How many rows are returned?",
+                "2",
+                "",
+                ""
+            },
+            {
+                "SELECT name FROM inventory WHERE category = 'Tools' OR category = 'Books' AND published = 1;",
+                "How many rows are returned?",
+                "4",
+                "",
+                ""
+            },
+            {
+                "SELECT name, price FROM inventory WHERE published = 1 AND price < 40;",
+                "What is the sum of the returned prices?",
+                "35",
+                "",
+                ""
+            }
         };
+
         bool passed = true;
+
         for (const Exercise& question : questions)
         {
-            output << "\n" << question.query << "\n" << question.prompt << "\nAnswer: ";
+            output << '\n' << question.query << '\n'
+                << question.prompt << "\nAnswer: ";
+
             const std::string answer = Read(input);
+
             if (answer == "back")
             {
                 passed = false;
                 break;
             }
+
             if (answer != question.answer)
             {
-                output << "Attempt not passed. Review WHERE, AND/OR grouping, and strict versus inclusive comparisons.\n";
+                output << "Attempt not passed. Review WHERE, AND/OR grouping, "
+                    << "and strict versus inclusive comparisons.\n";
+
                 passed = false;
                 break;
             }
         }
+
         if (passed)
         {
-            output << "\nSQL FUNDAMENTALS ASSESSMENT PASSED (3/3).\n";
-            output << "This records lesson assessment success for this session only.\n";
-            output << "No external lab completion or XP has been awarded.\n";
+            output << "\nSQL FUNDAMENTALS ASSESSMENT PASSED (3/3).\n"
+                << "Save from the main menu to keep this progress.\n"
+                << "No external lab completion is recorded. Any eligible XP is awarded when returning to the main menu..\n";
         }
+
         return passed;
     }
 
@@ -213,24 +276,64 @@ docker compose -f ./labs/compose.yaml stop
     }
 
 public:
+    bool IsRewardClaimed() const
+    {
+        return rewardClaimed;
+    }
+
+    void MarkRewardClaimed()
+    {
+        if (assessmentComplete)
+        {
+            rewardClaimed = true;
+        }
+    }
+    bool IsGuidedComplete() const
+    {
+        return guidedComplete;
+    }
+
     bool IsAssessmentComplete() const
     {
         return assessmentComplete;
     }
 
-    void Run(std::istream& input = std::cin, std::ostream& output = std::cout)
+    // Restore saved flags without awarding XP.
+    void RestoreProgress(
+        bool guided,
+        bool assessment,
+        bool claimed = false)
+    {
+        guidedComplete = guided;
+        assessmentComplete = guided && assessment;
+        rewardClaimed = assessmentComplete && claimed;
+    }
+
+    void Run(
+        std::istream& input = std::cin,
+        std::ostream& output = std::cout)
     {
         bool open = true;
+
         while (open)
         {
             output << "\n========== SQL FUNDAMENTALS ==========\n";
             output << "Stage 1 of the planned SQL injection course\n";
-            output << "Guided practice: " << (guidedComplete ? "Complete" : "Not complete") << '\n';
-            output << "Assessment: " << (assessmentComplete ? "Passed" : "Not passed") << '\n';
-            output << "Session-only progress; saving and XP integration are pending.\n";
-            output << "1. Read lesson\n2. Guided query practice\n3. Independent assessment\n";
-            output << "4. Docker practice guide\n0. Return to main menu\nChoice: ";
+            output << "Guided practice: "
+                << (guidedComplete ? "Complete" : "Not complete") << '\n';
+            output << "Assessment: "
+                << (assessmentComplete ? "Passed" : "Not passed") << '\n';
+            output << "SQL progress is included when you save from the main menu.\n";
+            output << "Assessment reward: 150 XP, awarded once when returning to the main menu.\n";
+            output << "1. Read lesson\n";
+            output << "2. Guided query practice\n";
+            output << "3. Independent assessment\n";
+            output << "4. Docker practice guide\n";
+            output << "0. Return to main menu\n";
+            output << "Choice: ";
+
             const std::string choice = Read(input);
+
             if (choice == "0")
             {
                 open = false;
@@ -247,11 +350,12 @@ public:
             {
                 if (!guidedComplete)
                 {
-                    output << "Complete guided practice before the independent assessment.\n";
+                    output << "Complete guided practice before "
+                        << "the independent assessment.\n";
                 }
                 else if (assessmentComplete)
                 {
-                    output << "Already passed in this session. No additional XP is awarded.\n";
+                    output << "Assessment already passed.\n "
                 }
                 else
                 {

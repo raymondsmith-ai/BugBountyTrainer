@@ -6,6 +6,7 @@
 #include "Researcher.h"
 #include "Challenge.h"
 #include "LearningModule.h"
+#include "SQLFundamentals.h"
 
 // ====================================
 // SaveManager Class
@@ -24,6 +25,7 @@ public:
         const Researcher& researcher,
         const std::vector<Challenge>& challenges,
         const std::vector<LearningModule>& learningModules,
+        const SQLFundamentals& sqlFundamentals,
         const std::string& filename);
 
     // Restore researcher information,
@@ -32,5 +34,6 @@ public:
         Researcher& researcher,
         std::vector<Challenge>& challenges,
         std::vector<LearningModule>& learningModules,
+        SQLFundamentals& sqlFundamentals,
         const std::string& filename);
 };

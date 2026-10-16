@@ -20,7 +20,10 @@ namespace
     {
         std::ifstream file(path);
         std::string version;
-        return std::getline(file, version) && version == "BBT_SAVE_V2";
+        return std::getline(file, version) &&
+            (version == "BBT_SAVE_V2" ||
+                version == "BBT_SAVE_V3" ||
+                version == "BBT_SAVE_V4");
     }
 
     std::vector<std::filesystem::path> FindSaveFiles(bool supportedOnly)
@@ -71,7 +74,10 @@ namespace
         std::ifstream file(path);
         std::string version;
         std::string name;
-        if (std::getline(file, version) && version == "BBT_SAVE_V2" &&
+        if (std::getline(file, version) &&
+            (version == "BBT_SAVE_V2" ||
+                version == "BBT_SAVE_V3" ||
+                version == "BBT_SAVE_V4") &&
             std::getline(file, name) && !name.empty())
         {
             return name;
@@ -1867,8 +1873,21 @@ void TrainerApp::HandleChoice(int choice)
         LoadProgress();
         break;
     case 10:
+    {
         sqlFundamentals.Run();
+
+        if (sqlFundamentals.IsAssessmentComplete() &&
+            !sqlFundamentals.IsRewardClaimed())
+        {
+            researcher.AddXP(150);
+            sqlFundamentals.MarkRewardClaimed();
+
+            std::cout << "\nSQL Fundamentals completion reward: 150 XP!\n";
+            std::cout << "Save your progress to keep this reward.\n";
+        }
+
         break;
+    }
     case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
@@ -1915,6 +1934,7 @@ void TrainerApp::OpenOptions()
 }
 bool TrainerApp::SelectSavedUser()
 {
+
     const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(true);
 
     if (saveFiles.empty())
@@ -1938,9 +1958,12 @@ bool TrainerApp::SelectSavedUser()
     {
         return false;
     }
-
     if (!SaveManager::LoadProgress(
-        researcher, challenges, learningModules, saveFiles[choice - 1].string()))
+        researcher,
+        challenges,
+        learningModules,
+        sqlFundamentals,
+        saveFiles[choice - 1].string()))
     {
         std::cout << "\nUnable to load that save file.\n";
         Pause();
@@ -2214,6 +2237,7 @@ void TrainerApp::SaveProgress()
         researcher,
         challenges,
         learningModules,
+        sqlFundamentals,
         filename))
     {
         std::cout << "\nProgress saved successfully!\n";
@@ -2241,6 +2265,7 @@ void TrainerApp::LoadProgress()
         researcher,
         challenges,
         learningModules,
+        sqlFundamentals,
         filename))
     {
         std::cout << "\nProgress restored successfully!\n";

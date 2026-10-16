@@ -13,6 +13,7 @@ bool SaveManager::SaveProgress(
     const Researcher& researcher,
     const std::vector<Challenge>& challenges,
     const std::vector<LearningModule>& learningModules,
+    const SQLFundamentals& sqlFundamentals,
     const std::string& filename)
 {
     std::ofstream file(filename);
@@ -24,7 +25,7 @@ bool SaveManager::SaveProgress(
     }
 
     // Save file format version.
-    file << "BBT_SAVE_V2\n";
+    file << "BBT_SAVE_V4\n";
 
     // Save researcher information.
     file << researcher.GetName() << '\n';
@@ -48,6 +49,10 @@ bool SaveManager::SaveProgress(
         file << module.IsUnlocked() << ' '
              << module.IsCompleted() << '\n';
     }
+    // Save SQL lesson progress without awarding XP.
+    file << sqlFundamentals.IsGuidedComplete() << ' '
+        << sqlFundamentals.IsAssessmentComplete() << ' '
+        << sqlFundamentals.IsRewardClaimed() << '\n';
 
     file.close();
 
@@ -68,6 +73,7 @@ bool SaveManager::LoadProgress(
     Researcher& researcher,
     std::vector<Challenge>& challenges,
     std::vector<LearningModule>& learningModules,
+    SQLFundamentals& sqlFundamentals,
     const std::string& filename)
 {
     std::ifstream file(filename);
@@ -87,7 +93,9 @@ bool SaveManager::LoadProgress(
 
     // Check save file version.
     if (!std::getline(file, version) ||
-        version != "BBT_SAVE_V2")
+        (version != "BBT_SAVE_V2" &&
+            version != "BBT_SAVE_V3" &&
+            version != "BBT_SAVE_V4"))
     {
         std::cout << "\nUnsupported save file format.\n";
         return false;
@@ -168,7 +176,34 @@ bool SaveManager::LoadProgress(
         completedModules.push_back(completed == 1);
     }
 
+    int savedGuided = 0;
+    int savedAssessment = 0;
+    int savedRewardClaimed = 0;
+
+    if (version == "BBT_SAVE_V3" || version == "BBT_SAVE_V4")
+    {
+        if (!(file >> savedGuided >> savedAssessment) ||
+            (savedGuided != 0 && savedGuided != 1) ||
+            (savedAssessment != 0 && savedAssessment != 1) ||
+            (savedAssessment == 1 && savedGuided == 0))
+        {
+            std::cout << "\nInvalid SQL progress data.\n";
+            return false;
+        }
+    }
+
+    if (version == "BBT_SAVE_V4")
+    {
+        if (!(file >> savedRewardClaimed) ||
+            (savedRewardClaimed != 0 && savedRewardClaimed != 1) ||
+            (savedRewardClaimed == 1 && savedAssessment == 0))
+        {
+            std::cout << "\nInvalid SQL reward data.\n";
+            return false;
+        }
+    }
     // Restore researcher XP and level.
+        // Older V2 saves have no SQL progress.
     if (!researcher.RestoreProgress(
         savedLevel,
         savedTotalXP,
@@ -196,6 +231,10 @@ bool SaveManager::LoadProgress(
             unlockedModules[i],
             completedModules[i]);
     }
+    sqlFundamentals.RestoreProgress(
+        savedGuided == 1,
+        savedAssessment == 1,
+        savedRewardClaimed == 1);
 
     return true;
 }
