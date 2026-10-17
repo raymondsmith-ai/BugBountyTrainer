@@ -154,6 +154,22 @@ I also successfully tested the main menu, Learning Path, module unlocking, chall
 ### Next Steps
 
 For the next milestone, I plan to continue expanding the training content and hands-on activities. I want to add more simulated labs, continue developing the later learning modules, improve researcher progression, and begin working on additional tools and inventory features.
+## Week 3 – Project Stand-Up
+
+### Overview
+This week, I focused on expanding BugBountyTrainer and improving its stability.
+
+### Improvements
+I added SQL Fundamentals lessons, guided practice, and an assessment. I also improved progress saving and implemented one-time XP rewards.
+
+### Challenges
+Integrating new features with the save/load system was challenging. I worked through these issues by testing functionality and fixing progress-tracking problems.
+
+### Feedback
+Previous feedback encouraged better input validation, progression, and code organization. I've continued improving these areas.
+
+### Next Steps
+For Week 4, I'll focus on testing, refactoring, and preparing the final milestone while planning future cybersecurity labs.
 
 ## Author
 
