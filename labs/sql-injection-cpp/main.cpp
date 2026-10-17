@@ -8,10 +8,22 @@
 #include <iostream>
 #include <string>
 
+#include "Database.h"
+#include "LessonManager.h"
+
+// ====================================
+// BugBountyTrainer SQL Injection Academy
+// C++20 Docker Training Server
+// ====================================
+
 namespace
 {
     constexpr int PORT = 8000;
     constexpr int BUFFER_SIZE = 4096;
+
+    // ====================================
+    // Send HTTP Response
+    // ====================================
 
     void SendResponse(
         int clientSocket,
@@ -19,8 +31,26 @@ namespace
         const std::string& contentType,
         int statusCode = 200)
     {
-        const std::string status =
-            statusCode == 200 ? "200 OK" : "404 Not Found";
+        std::string status;
+
+        switch (statusCode)
+        {
+        case 200:
+            status = "200 OK";
+            break;
+
+        case 404:
+            status = "404 Not Found";
+            break;
+
+        case 405:
+            status = "405 Method Not Allowed";
+            break;
+
+        default:
+            status = "500 Internal Server Error";
+            break;
+        }
 
         const std::string response =
             "HTTP/1.1 " + status + "\r\n"
@@ -28,6 +58,7 @@ namespace
             "Content-Length: " + std::to_string(body.size()) + "\r\n"
             "Connection: close\r\n"
             "Cache-Control: no-store\r\n"
+            "X-Content-Type-Options: nosniff\r\n"
             "\r\n" + body;
 
         std::size_t sent = 0;
@@ -48,6 +79,10 @@ namespace
             sent += static_cast<std::size_t>(result);
         }
     }
+
+    // ====================================
+    // Handle Client HTTP Requests
+    // ====================================
 
     void HandleClient(int clientSocket)
     {
@@ -78,11 +113,18 @@ namespace
         const std::string requestLine =
             request.substr(0, lineEnd);
 
-        const std::size_t firstSpace = requestLine.find(' ');
-        const std::size_t secondSpace = requestLine.find(' ', firstSpace + 1);
+        const std::size_t firstSpace =
+            requestLine.find(' ');
 
-        if (firstSpace == std::string::npos ||
-            secondSpace == std::string::npos)
+        if (firstSpace == std::string::npos)
+        {
+            return;
+        }
+
+        const std::size_t secondSpace =
+            requestLine.find(' ', firstSpace + 1);
+
+        if (secondSpace == std::string::npos)
         {
             return;
         }
@@ -90,9 +132,14 @@ namespace
         const std::string method =
             requestLine.substr(0, firstSpace);
 
-        const std::string path = requestLine.substr(
-            firstSpace + 1,
-            secondSpace - firstSpace - 1);
+        const std::string path =
+            requestLine.substr(
+                firstSpace + 1,
+                secondSpace - firstSpace - 1);
+
+        // ====================================
+        // Validate HTTP Method
+        // ====================================
 
         if (method != "GET")
         {
@@ -100,38 +147,209 @@ namespace
                 clientSocket,
                 R"({"error":"Method not supported"})",
                 "application/json",
-                404);
+                405);
         }
+
+        // ====================================
+        // Health Check
+        // ====================================
+
         else if (path == "/health")
         {
             SendResponse(
                 clientSocket,
                 "ok",
-                "text/plain");
+                "text/plain",
+                200);
         }
+
+        // ====================================
+        // Docker Server Status
+        // ====================================
+
         else if (path == "/status")
         {
             SendResponse(
                 clientSocket,
-                R"({"name":"BugBountyTrainer SQL Lab","status":"online","language":"C++20","database":"pending"})",
-                "application/json");
+                R"({
+                    "name": "BugBountyTrainer SQL Lab",
+                    "status": "online",
+                    "language": "C++20",
+                    "database": "ready",
+                    "database_engine": "SQLite3",
+                    "course": "SQL Injection Academy",
+                    "total_modules": 13
+                })",
+                "application/json",
+                200);
         }
+
+        // ====================================
+        // Available SQL Injection Challenges
+        // ====================================
+
         else if (path == "/challenges")
         {
             SendResponse(
                 clientSocket,
-                R"({"challenges":[{"id":1,"title":"Basic SQL Injection","difficulty":"Beginner"},{"id":2,"title":"Boolean Query Manipulation","difficulty":"Intermediate"},{"id":3,"title":"Database Investigation","difficulty":"Intermediate"}]})",
-                "application/json");
+                R"({
+                    "challenges": [
+                        {
+                            "id": 1,
+                            "title": "Basic SQL Injection",
+                            "difficulty": "Beginner"
+                        },
+                        {
+                            "id": 2,
+                            "title": "Boolean Query Manipulation",
+                            "difficulty": "Intermediate"
+                        },
+                        {
+                            "id": 3,
+                            "title": "Database Investigation",
+                            "difficulty": "Intermediate"
+                        }
+                    ]
+                })",
+                "application/json",
+                200);
         }
+
+        // ====================================
+        // Complete SQL Injection Curriculum
+        // ====================================
+
+        else if (path == "/lessons")
+        {
+            SendResponse(
+                clientSocket,
+                R"({
+                    "course": "SQL Injection Academy",
+                    "description": "Complete beginner-to-intermediate SQL Injection training",
+                    "language": "C++20",
+                    "database": "SQLite3",
+                    "total_modules": 13,
+                    "modules": [
+                        {
+                            "id": 1,
+                            "title": "Introduction to Databases",
+                            "difficulty": "Beginner"
+                        },
+                        {
+                            "id": 2,
+                            "title": "SQL Fundamentals",
+                            "difficulty": "Beginner"
+                        },
+                        {
+                            "id": 3,
+                            "title": "Understanding SQL Injection",
+                            "difficulty": "Beginner"
+                        },
+                        {
+                            "id": 4,
+                            "title": "Basic SQL Injection",
+                            "difficulty": "Beginner"
+                        },
+                        {
+                            "id": 5,
+                            "title": "Preventing SQL Injection",
+                            "difficulty": "Beginner"
+                        },
+                        {
+                            "id": 6,
+                            "title": "SQL Query Manipulation",
+                            "difficulty": "Developing"
+                        },
+                        {
+                            "id": 7,
+                            "title": "UNION-Based SQL Injection",
+                            "difficulty": "Developing"
+                        },
+                        {
+                            "id": 8,
+                            "title": "Database Enumeration",
+                            "difficulty": "Developing"
+                        },
+                        {
+                            "id": 9,
+                            "title": "Authentication Vulnerabilities",
+                            "difficulty": "Intermediate"
+                        },
+                        {
+                            "id": 10,
+                            "title": "Error-Based SQL Injection",
+                            "difficulty": "Intermediate"
+                        },
+                        {
+                            "id": 11,
+                            "title": "Blind SQL Injection",
+                            "difficulty": "Intermediate"
+                        },
+                        {
+                            "id": 12,
+                            "title": "Secure Database Development",
+                            "difficulty": "Intermediate"
+                        },
+                        {
+                            "id": 13,
+                            "title": "Final Practical Assessment",
+                            "difficulty": "Intermediate"
+                        }
+                    ]
+                })",
+                "application/json",
+                200);
+        }
+
+        // ====================================
+        // Module 1: Introduction to Databases
+        // ====================================
+
+        else if (path == "/lessons/1")
+        {
+            SendResponse(
+                clientSocket,
+                LessonManager::GetLesson(1),
+                "application/json",
+                200);
+        }
+
+        // ====================================
+        // Homepage
+        // ====================================
+
         else if (path == "/")
         {
             SendResponse(
                 clientSocket,
-                "<h1>BugBountyTrainer C++ SQL Lab</h1>"
+                "<!DOCTYPE html>"
+                "<html lang=\"en\">"
+                "<head>"
+                "<meta charset=\"UTF-8\">"
+                "<title>BugBountyTrainer SQL Injection Academy</title>"
+                "</head>"
+                "<body>"
+                "<h1>BugBountyTrainer SQL Injection Academy</h1>"
+                "<h2>C++20 + SQLite3 + Docker</h2>"
                 "<p>Training server is online.</p>"
-                "<p>Endpoints: /health, /status, /challenges</p>",
-                "text/html; charset=utf-8");
+                "<h3>Available Endpoints</h3>"
+                "<ul>"
+                "<li><a href=\"/health\">Health Check</a></li>"
+                "<li><a href=\"/status\">Server Status</a></li>"
+                "<li><a href=\"/challenges\">SQL Challenges</a></li>"
+                "<li><a href=\"/lessons\">Complete Course Catalog</a></li>"
+                "<li><a href=\"/lessons/1\">Module 1: Introduction to Databases</a></li>"
+                "</ul>"
+                "</body>"
+                "</html>",
+                "text/html; charset=utf-8",
+                200);
         }
+
+        // ====================================
+        // Unknown Endpoint
+        // ====================================
+
         else
         {
             SendResponse(
@@ -143,15 +361,47 @@ namespace
     }
 }
 
+// ====================================
+// Main Application
+// ====================================
+
 int main()
 {
-    const int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    // ====================================
+    // Initialize SQLite Database
+    // ====================================
+
+    Database trainingDatabase;
+
+    if (!trainingDatabase.Initialize())
+    {
+        std::cerr
+            << "Failed to initialize training database.\n";
+
+        return 1;
+    }
+
+    std::cout
+        << "SQLite training database initialized.\n";
+
+    // ====================================
+    // Create Server Socket
+    // ====================================
+
+    const int serverSocket =
+        socket(AF_INET, SOCK_STREAM, 0);
 
     if (serverSocket < 0)
     {
-        std::cerr << "Failed to create socket.\n";
+        std::cerr
+            << "Failed to create server socket.\n";
+
         return 1;
     }
+
+    // ====================================
+    // Enable Address Reuse
+    // ====================================
 
     const int reuseAddress = 1;
 
@@ -162,39 +412,78 @@ int main()
         &reuseAddress,
         sizeof(reuseAddress));
 
+    // ====================================
+    // Configure Server Address
+    // ====================================
+
     sockaddr_in address = {};
 
     address.sin_family = AF_INET;
+
     address.sin_addr.s_addr = INADDR_ANY;
+
     address.sin_port = htons(PORT);
+
+    // ====================================
+    // Bind Socket
+    // ====================================
 
     if (bind(
         serverSocket,
         reinterpret_cast<sockaddr*>(&address),
         sizeof(address)) < 0)
     {
-        std::cerr << "Bind failed: "
-                  << std::strerror(errno) << '\n';
+        std::cerr
+            << "Bind failed: "
+            << std::strerror(errno)
+            << '\n';
 
         close(serverSocket);
+
         return 1;
     }
+
+    // ====================================
+    // Start Listening
+    // ====================================
 
     if (listen(serverSocket, 10) < 0)
     {
-        std::cerr << "Listen failed.\n";
+        std::cerr
+            << "Failed to start listening.\n";
+
         close(serverSocket);
+
         return 1;
     }
 
-    std::cout << "BugBountyTrainer C++ SQL Lab\n";
-    std::cout << "Listening on port " << PORT << '\n';
+    // ====================================
+    // Server Ready
+    // ====================================
+
+    std::cout
+        << "\n====================================\n"
+        << "      BUGBOUNTYTRAINER SQL ACADEMY\n"
+        << "====================================\n"
+        << "Language: C++20\n"
+        << "Database: SQLite3\n"
+        << "Course Modules: 13\n"
+        << "Server Port: " << PORT << '\n'
+        << "Status: ONLINE\n"
+        << "====================================\n";
+
     std::cout.flush();
+
+    // ====================================
+    // Accept Client Connections
+    // ====================================
 
     while (true)
     {
         sockaddr_in clientAddress = {};
-        socklen_t clientLength = sizeof(clientAddress);
+
+        socklen_t clientLength =
+            sizeof(clientAddress);
 
         const int clientSocket = accept(
             serverSocket,
@@ -207,9 +496,11 @@ int main()
         }
 
         HandleClient(clientSocket);
+
         close(clientSocket);
     }
 
     close(serverSocket);
+
     return 0;
 }
