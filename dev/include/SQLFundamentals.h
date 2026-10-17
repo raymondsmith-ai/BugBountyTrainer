@@ -355,7 +355,7 @@ public:
                 }
                 else if (assessmentComplete)
                 {
-                    output << "Assessment already passed.\n "
+                    output << "Assessment already passed.\n ";
                 }
                 else
                 {
