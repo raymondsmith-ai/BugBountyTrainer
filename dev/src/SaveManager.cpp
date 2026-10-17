@@ -6,7 +6,8 @@
 #include <vector>
 
 // ====================================
-// Save Researcher, Challenges, Modules
+// Save Researcher, Challenges, Modules,
+// SQL Fundamentals, and SQL Injection
 // ====================================
 
 bool SaveManager::SaveProgress(
@@ -14,6 +15,7 @@ bool SaveManager::SaveProgress(
     const std::vector<Challenge>& challenges,
     const std::vector<LearningModule>& learningModules,
     const SQLFundamentals& sqlFundamentals,
+    const SQLInjection& sqlInjection,
     const std::string& filename)
 {
     std::ofstream file(filename);
@@ -24,16 +26,25 @@ bool SaveManager::SaveProgress(
         return false;
     }
 
-    // Save file format version.
-    file << "BBT_SAVE_V4\n";
+    // ====================================
+    // Save File Version
+    // ====================================
 
-    // Save researcher information.
+    file << "BBT_SAVE_V5\n";
+
+    // ====================================
+    // Save Researcher Information
+    // ====================================
+
     file << researcher.GetName() << '\n';
     file << researcher.GetLevel() << '\n';
     file << researcher.GetTotalXP() << '\n';
     file << researcher.GetAvailableXP() << '\n';
 
-    // Save challenge completion.
+    // ====================================
+    // Save Challenge Completion
+    // ====================================
+
     file << challenges.size() << '\n';
 
     for (const Challenge& challenge : challenges)
@@ -41,18 +52,37 @@ bool SaveManager::SaveProgress(
         file << challenge.IsCompleted() << '\n';
     }
 
-    // Save learning module progress.
+    // ====================================
+    // Save Learning Module Progress
+    // ====================================
+
     file << learningModules.size() << '\n';
 
     for (const LearningModule& module : learningModules)
     {
         file << module.IsUnlocked() << ' '
-             << module.IsCompleted() << '\n';
+            << module.IsCompleted() << '\n';
     }
-    // Save SQL lesson progress without awarding XP.
+
+    // ====================================
+    // Save SQL Fundamentals Progress
+    // ====================================
+
     file << sqlFundamentals.IsGuidedComplete() << ' '
         << sqlFundamentals.IsAssessmentComplete() << ' '
         << sqlFundamentals.IsRewardClaimed() << '\n';
+
+    // ====================================
+    // Save SQL Injection Stage 2 Progress
+    // ====================================
+
+    file << sqlInjection.IsLessonComplete() << ' '
+        << sqlInjection.IsAssessmentComplete() << ' '
+        << sqlInjection.IsRewardClaimed() << '\n';
+
+    // ====================================
+    // Close File and Check for Errors
+    // ====================================
 
     file.close();
 
@@ -66,7 +96,8 @@ bool SaveManager::SaveProgress(
 }
 
 // ====================================
-// Load Researcher, Challenges, Modules
+// Load Researcher, Challenges, Modules,
+// SQL Fundamentals, and SQL Injection
 // ====================================
 
 bool SaveManager::LoadProgress(
@@ -74,6 +105,7 @@ bool SaveManager::LoadProgress(
     std::vector<Challenge>& challenges,
     std::vector<LearningModule>& learningModules,
     SQLFundamentals& sqlFundamentals,
+    SQLInjection& sqlInjection,
     const std::string& filename)
 {
     std::ifstream file(filename);
@@ -84,6 +116,10 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
+    // ====================================
+    // Temporary Save Data
+    // ====================================
+
     std::string version;
     std::string savedName;
 
@@ -91,17 +127,24 @@ bool SaveManager::LoadProgress(
     int savedTotalXP = 0;
     int savedAvailableXP = 0;
 
-    // Check save file version.
+    // ====================================
+    // Validate Save File Version
+    // ====================================
+
     if (!std::getline(file, version) ||
         (version != "BBT_SAVE_V2" &&
             version != "BBT_SAVE_V3" &&
-            version != "BBT_SAVE_V4"))
+            version != "BBT_SAVE_V4" &&
+            version != "BBT_SAVE_V5"))
     {
         std::cout << "\nUnsupported save file format.\n";
         return false;
     }
 
-    // Read researcher name.
+    // ====================================
+    // Read Researcher Name
+    // ====================================
+
     if (!std::getline(file, savedName) ||
         savedName.empty())
     {
@@ -109,16 +152,22 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    // Read researcher progress.
+    // ====================================
+    // Read Researcher Progress
+    // ====================================
+
     if (!(file >> savedLevel
-               >> savedTotalXP
-               >> savedAvailableXP))
+        >> savedTotalXP
+        >> savedAvailableXP))
     {
         std::cout << "\nInvalid researcher data.\n";
         return false;
     }
 
-    // Read challenge count.
+    // ====================================
+    // Read Challenge Count
+    // ====================================
+
     std::size_t challengeCount = 0;
 
     if (!(file >> challengeCount) ||
@@ -128,8 +177,13 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    // Read challenge completion flags.
+    // ====================================
+    // Read Challenge Completion
+    // ====================================
+
     std::vector<bool> completedChallenges;
+
+    completedChallenges.reserve(challengeCount);
 
     for (std::size_t i = 0; i < challengeCount; i++)
     {
@@ -145,7 +199,10 @@ bool SaveManager::LoadProgress(
         completedChallenges.push_back(completed == 1);
     }
 
-    // Read learning module count.
+    // ====================================
+    // Read Learning Module Count
+    // ====================================
+
     std::size_t moduleCount = 0;
 
     if (!(file >> moduleCount) ||
@@ -155,9 +212,15 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    // Temporary module progress.
+    // ====================================
+    // Read Learning Module Progress
+    // ====================================
+
     std::vector<bool> unlockedModules;
     std::vector<bool> completedModules;
+
+    unlockedModules.reserve(moduleCount);
+    completedModules.reserve(moduleCount);
 
     for (std::size_t i = 0; i < moduleCount; i++)
     {
@@ -176,34 +239,93 @@ bool SaveManager::LoadProgress(
         completedModules.push_back(completed == 1);
     }
 
+    // ====================================
+    // SQL Fundamentals Temporary Data
+    // ====================================
+
     int savedGuided = 0;
     int savedAssessment = 0;
     int savedRewardClaimed = 0;
 
-    if (version == "BBT_SAVE_V3" || version == "BBT_SAVE_V4")
+    // ====================================
+    // Read SQL Fundamentals Progress
+    // V3, V4, and V5
+    // ====================================
+
+    if (version == "BBT_SAVE_V3" ||
+        version == "BBT_SAVE_V4" ||
+        version == "BBT_SAVE_V5")
     {
         if (!(file >> savedGuided >> savedAssessment) ||
             (savedGuided != 0 && savedGuided != 1) ||
             (savedAssessment != 0 && savedAssessment != 1) ||
             (savedAssessment == 1 && savedGuided == 0))
         {
-            std::cout << "\nInvalid SQL progress data.\n";
+            std::cout << "\nInvalid SQL Fundamentals progress.\n";
             return false;
         }
     }
 
-    if (version == "BBT_SAVE_V4")
+    // ====================================
+    // Read SQL Fundamentals Reward
+    // V4 and V5
+    // ====================================
+
+    if (version == "BBT_SAVE_V4" ||
+        version == "BBT_SAVE_V5")
     {
         if (!(file >> savedRewardClaimed) ||
-            (savedRewardClaimed != 0 && savedRewardClaimed != 1) ||
-            (savedRewardClaimed == 1 && savedAssessment == 0))
+            (savedRewardClaimed != 0 &&
+                savedRewardClaimed != 1) ||
+            (savedRewardClaimed == 1 &&
+                savedAssessment == 0))
         {
-            std::cout << "\nInvalid SQL reward data.\n";
+            std::cout << "\nInvalid SQL Fundamentals reward data.\n";
             return false;
         }
     }
-    // Restore researcher XP and level.
-        // Older V2 saves have no SQL progress.
+
+    // ====================================
+    // SQL Injection Temporary Data
+    // ====================================
+
+    int savedInjectionLesson = 0;
+    int savedInjectionAssessment = 0;
+    int savedInjectionReward = 0;
+
+    // ====================================
+    // Read SQL Injection Stage 2 Progress
+    // V5 Only
+    // ====================================
+
+    if (version == "BBT_SAVE_V5")
+    {
+        if (!(file >> savedInjectionLesson
+            >> savedInjectionAssessment
+            >> savedInjectionReward) ||
+            (savedInjectionLesson != 0 &&
+                savedInjectionLesson != 1) ||
+            (savedInjectionAssessment != 0 &&
+                savedInjectionAssessment != 1) ||
+            (savedInjectionReward != 0 &&
+                savedInjectionReward != 1) ||
+            (savedInjectionAssessment == 1 &&
+                savedInjectionLesson == 0) ||
+            (savedInjectionReward == 1 &&
+                savedInjectionAssessment == 0))
+        {
+            std::cout << "\nInvalid SQL Injection progress data.\n";
+            return false;
+        }
+    }
+
+    // ====================================
+    // Restore Researcher Progress
+    // ====================================
+
+    // Validate XP and level before applying
+    // the remaining saved progress.
+
     if (!researcher.RestoreProgress(
         savedLevel,
         savedTotalXP,
@@ -213,28 +335,55 @@ bool SaveManager::LoadProgress(
         return false;
     }
 
-    // Apply the saved name only after the entire file and progression validate.
+    // ====================================
+    // Restore Researcher Name
+    // ====================================
+
     researcher.SetName(savedName);
 
-    // Restore challenges without awarding XP.
+    // ====================================
+    // Restore Challenge Completion
+    // ====================================
+
+    // Restoring completion does not award XP.
+
     for (std::size_t i = 0; i < challengeCount; i++)
     {
         challenges[i].RestoreCompletion(
             completedChallenges[i]);
     }
 
-    // Restore learning modules without
-    // awarding XP or charging unlock costs.
+    // ====================================
+    // Restore Learning Module Progress
+    // ====================================
+
+    // Restoring modules does not award XP
+    // or charge module unlock costs.
+
     for (std::size_t i = 0; i < moduleCount; i++)
     {
         learningModules[i].RestoreProgress(
             unlockedModules[i],
             completedModules[i]);
     }
+
+    // ====================================
+    // Restore SQL Fundamentals Progress
+    // ====================================
+
     sqlFundamentals.RestoreProgress(
         savedGuided == 1,
         savedAssessment == 1,
         savedRewardClaimed == 1);
+
+    // ====================================
+    // Restore SQL Injection Stage 2
+    // ====================================
+
+    sqlInjection.RestoreProgress(
+        savedInjectionLesson == 1,
+        savedInjectionAssessment == 1,
+        savedInjectionReward == 1);
 
     return true;
 }

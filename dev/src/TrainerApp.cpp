@@ -12,6 +12,11 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+
+
+
+
+
 // Shared assessment helpers. The last correct-answer position is remembered
 // for each question during this application session, including retakes.
 namespace
@@ -20,10 +25,12 @@ namespace
     {
         std::ifstream file(path);
         std::string version;
+        
         return std::getline(file, version) &&
             (version == "BBT_SAVE_V2" ||
                 version == "BBT_SAVE_V3" ||
-                version == "BBT_SAVE_V4");
+                version == "BBT_SAVE_V4" ||
+                version == "BBT_SAVE_V5");
     }
 
     std::vector<std::filesystem::path> FindSaveFiles(bool supportedOnly)
@@ -69,21 +76,26 @@ namespace
         return saveFiles;
     }
 
-    std::string SavedUserLabel(const std::filesystem::path& path)
-    {
-        std::ifstream file(path);
-        std::string version;
-        std::string name;
-        if (std::getline(file, version) &&
-            (version == "BBT_SAVE_V2" ||
-                version == "BBT_SAVE_V3" ||
-                version == "BBT_SAVE_V4") &&
-            std::getline(file, name) && !name.empty())
+   
+        std::string SavedUserLabel(const std::filesystem::path & path)
         {
-            return name;
+            std::ifstream file(path);
+            std::string version;
+            std::string name;
+
+            if (std::getline(file, version) &&
+                (version == "BBT_SAVE_V2" ||
+                    version == "BBT_SAVE_V3" ||
+                    version == "BBT_SAVE_V4" ||
+                    version == "BBT_SAVE_V5") &&
+                std::getline(file, name) &&
+                !name.empty())
+            {
+                return name;
+            }
+
+            return path.filename().string() + " [unsupported or unreadable]";
         }
-        return path.filename().string() + " [unsupported or unreadable]";
-    }
 
     std::string GenerateValidationCode()
     {
@@ -1892,6 +1904,20 @@ void TrainerApp::HandleChoice(int choice)
     case 11:
     {
         sqlInjection.Run();
+
+        if (sqlInjection.IsAssessmentComplete() &&
+            !sqlInjection.IsRewardClaimed())
+        {
+            researcher.AddXP(200);
+            sqlInjection.MarkRewardClaimed();
+
+            std::cout
+                << "\nSQL Injection Stage 2 completion reward: 200 XP!\n";
+
+            std::cout
+                << "Save your progress to keep this reward.\n";
+        }
+
         break;
     }
     case 9:
@@ -1969,16 +1995,17 @@ bool TrainerApp::SelectSavedUser()
         challenges,
         learningModules,
         sqlFundamentals,
+        sqlInjection,
         saveFiles[choice - 1].string()))
     {
         std::cout << "\nUnable to load that save file.\n";
-        Pause();
+        
         return false;
     }
 
     std::cout << "\nProgress loaded for " << researcher.GetName() << ".\n";
-    Pause();
-    return true;
+     Pause();
+     return true;
 }
 
 void TrainerApp::DeleteSavedUser()
@@ -2244,6 +2271,7 @@ void TrainerApp::SaveProgress()
         challenges,
         learningModules,
         sqlFundamentals,
+        sqlInjection,
         filename))
     {
         std::cout << "\nProgress saved successfully!\n";
@@ -2272,6 +2300,7 @@ void TrainerApp::LoadProgress()
         challenges,
         learningModules,
         sqlFundamentals,
+        sqlInjection,
         filename))
     {
         std::cout << "\nProgress restored successfully!\n";
