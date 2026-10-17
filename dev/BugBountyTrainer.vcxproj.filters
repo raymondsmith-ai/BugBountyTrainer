@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -33,21 +33,30 @@
     <ClCompile Include="src\Lab.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\SaveManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TrainerApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LearningModule.h">
+    <ClInclude Include="include\LearningModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Researcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Lab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TrainerApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SaveManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SQLFundamentals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

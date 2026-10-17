@@ -7,43 +7,60 @@
 #include "Challenge.h"
 #include "LearningModule.h"
 #include "Lab.h"
+#include "SQLFundamentals.h"
 
 class TrainerApp
 {
 private:
     Researcher researcher;
 
-    // Stores training challenges.
     std::vector<Challenge> challenges;
-
-    // Stores learning modules.
     std::vector<LearningModule> learningModules;
-
-    // Stores hands-on labs.
     std::vector<Lab> labs;
+
+    SQLFundamentals sqlFundamentals;
 
     bool running;
 
-    // Main menu functions.
+    // Startup menu.
+    void DisplayStartupMenu() const;
+    void OpenOptions();
+    bool StartSession();
+
+    // Saved-user management.
+    bool SelectSavedUser();
+    void DeleteSavedUser();
+
+    // Main menu.
     void DisplayMenu() const;
     void HandleChoice(int choice);
 
-    // Learning path functions.
+    // Learning path.
     void DisplayLearningPath() const;
     void OpenLearningPath();
 
-    // Hands-on lab functions.
+    // Hands-on labs.
     void DisplayLabs() const;
     void OpenHandsOnLabs();
+    void RunTerminalInvestigationLab(Lab& lab);
 
-    void RunTerminalInvestigationLab(
-        Lab& lab);
-
-    // Training functions.
+    // Training challenges.
     void DisplayChallenges() const;
     void StartTraining();
 
-    // Input and usability functions.
+    // Vulnerability categories.
+    std::vector<std::string> GetCategories() const;
+    void DisplayCategories() const;
+    void BrowseCategories();
+
+    void DisplayChallengesByCategory(
+        const std::string& selectedCategory) const;
+
+    // Save and load current researcher progress.
+    void SaveProgress();
+    void LoadProgress();
+
+    // Input and utility functions.
     int GetValidatedChoice(
         int minimum,
         int maximum) const;
@@ -51,8 +68,7 @@ private:
     void Pause() const;
 
 public:
-    TrainerApp(
-        const std::string& researcherName);
+    explicit TrainerApp(const std::string& researcherName);
 
     void Run();
 };

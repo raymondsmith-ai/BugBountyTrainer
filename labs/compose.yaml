@@ -1,0 +1,21 @@
+﻿name: bbt-training
+
+services:
+  sql-lab:
+    build: ./sql-injection
+    ports:
+      - "127.0.0.1:8085:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - training
+
+networks:
+  training:
+    driver: bridge
+

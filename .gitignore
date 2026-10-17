@@ -18,3 +18,10 @@ x86/
 
 *.VC.db
 *.VC.VC.opendb
+
+# BugBountyTrainer save data
+researcher_save.txt
+researcher_save_backup.txt
+
+# Visual Studio project backups
+*.vcxproj.bak

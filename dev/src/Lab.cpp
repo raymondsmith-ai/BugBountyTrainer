@@ -146,7 +146,8 @@ bool Lab::AreAllObjectivesCompleted() const
 // Attempts to complete the lab.
 bool Lab::CompleteLab()
 {
-    if (!unlocked)
+    // Report success only for a new completion, so callers cannot reward repeats.
+    if (completed || !unlocked)
     {
         return false;
     }

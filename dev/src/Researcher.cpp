@@ -19,6 +19,10 @@ std::string Researcher::GetName() const
 {
     return name;
 }
+void Researcher::SetName(const std::string& newName)
+{
+    name = newName;
+}
 
 // Returns the researcher's current level.
 int Researcher::GetLevel() const
@@ -104,6 +108,31 @@ bool Researcher::SpendXP(int amount)
     }
 
     availableXP -= amount;
+
+    return true;
+}
+// ====================================
+// Restore Researcher Progress
+// ====================================
+
+bool Researcher::RestoreProgress(
+    int savedLevel,
+    int savedTotalXP,
+    int savedAvailableXP)
+{
+    // Reject invalid saved data.
+    if (savedLevel < 1 ||
+        savedTotalXP < 0 ||
+        savedAvailableXP < 0 ||
+        savedAvailableXP > savedTotalXP)
+    {
+        return false;
+    }
+
+    // Restore the saved progression.
+    level = savedLevel;
+    totalXP = savedTotalXP;
+    availableXP = savedAvailableXP;
 
     return true;
 }

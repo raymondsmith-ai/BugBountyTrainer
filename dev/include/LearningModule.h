@@ -52,6 +52,11 @@ public:
     void UnlockModule();
     void CompleteModule();
 
+
+    // Restores saved module progress without awarding XP.
+    void RestoreProgress(bool savedUnlocked, bool savedCompleted);
+
     // Displays module information.
     void DisplayModule() const;
+
 };

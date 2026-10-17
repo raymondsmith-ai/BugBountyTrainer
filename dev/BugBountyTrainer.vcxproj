@@ -139,6 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\SaveManager.cpp" />
     <ClCompile Include="src\BugBountyTrainer.cpp" />
     <ClCompile Include="src\Challenge.cpp" />
     <ClCompile Include="src\Lab.cpp" />
@@ -150,8 +151,10 @@
     <ClInclude Include="include\Challenge.h" />
     <ClInclude Include="include\Lab.h" />
     <ClInclude Include="include\Researcher.h" />
-    <ClInclude Include="LearningModule.h" />
+    <ClInclude Include="include\LearningModule.h" />
+    <ClInclude Include="include\SQLFundamentals.h" />
     <ClInclude Include="include\TrainerApp.h" />
+    <ClInclude Include="include\SaveManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -118,3 +118,20 @@ void Challenge::CompleteChallenge()
 {
     completed = true;
 }
+// ====================================
+// Restore Challenge Completion
+// ====================================
+
+void Challenge::RestoreCompletion(bool savedCompleted)
+{
+    completed = savedCompleted;
+}
+const std::string& Challenge::GetQuestion() const
+{
+    return question;
+}
+
+const std::vector<std::string>& Challenge::GetAnswerOptions() const
+{
+    return answerOptions;
+}
