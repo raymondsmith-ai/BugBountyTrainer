@@ -693,9 +693,10 @@ void TrainerApp::DisplayMenu() const
     std::cout << "8. Load Progress\n";
     std::cout << "9. Exit\n";
     std::cout << "10. SQL Fundamentals (Stage 1)\n";
+    std::cout << "11. SQL Injection Training (Stage 2)\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 10: ";
+    std::cout << "Enter a number from 1 to 11: ";
 }
 
 // ====================================
@@ -1888,6 +1889,11 @@ void TrainerApp::HandleChoice(int choice)
 
         break;
     }
+    case 11:
+    {
+        sqlInjection.Run();
+        break;
+    }
     case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
@@ -2107,7 +2113,7 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 10);
+            int choice = GetValidatedChoice(1, 11);
             HandleChoice(choice);
 
             // These screens handle their own pauses.

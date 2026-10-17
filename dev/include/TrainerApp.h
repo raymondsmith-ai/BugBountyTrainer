@@ -8,6 +8,7 @@
 #include "LearningModule.h"
 #include "Lab.h"
 #include "SQLFundamentals.h"
+#include "SQLInjection.h"
 
 class TrainerApp
 {
@@ -19,6 +20,7 @@ private:
     std::vector<Lab> labs;
 
     SQLFundamentals sqlFundamentals;
+    SQLInjection sqlInjection;
 
     bool running;
 

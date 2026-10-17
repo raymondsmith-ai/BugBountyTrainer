@@ -145,6 +145,7 @@
     <ClCompile Include="src\Lab.cpp" />
     <ClCompile Include="src\LearningModule.cpp" />
     <ClCompile Include="src\Researcher.cpp" />
+    <ClCompile Include="src\SQLInjection.cpp" />
     <ClCompile Include="src\TrainerApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +154,7 @@
     <ClInclude Include="include\Researcher.h" />
     <ClInclude Include="include\LearningModule.h" />
     <ClInclude Include="include\SQLFundamentals.h" />
+    <ClInclude Include="include\SQLInjection.h" />
     <ClInclude Include="include\TrainerApp.h" />
     <ClInclude Include="include\SaveManager.h" />
   </ItemGroup>
