@@ -25,3 +25,6 @@ researcher_save_backup.txt
 
 # Visual Studio project backups
 *.vcxproj.bak
+
+# BugBountyTrainer researcher save files
+researcher_save*.txt
