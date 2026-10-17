@@ -12,6 +12,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include "../include/DockerLabClient.h"
 
 
 
@@ -706,9 +707,10 @@ void TrainerApp::DisplayMenu() const
     std::cout << "9. Exit\n";
     std::cout << "10. SQL Fundamentals (Stage 1)\n";
     std::cout << "11. SQL Injection Training (Stage 2)\n";
+    std::cout << "12. Docker SQL Injection Labs\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 11: ";
+    std::cout << "Enter a number from 1 to 12: ";
 }
 
 // ====================================
@@ -1852,6 +1854,100 @@ void TrainerApp::StartTraining()
         std::cout << "No XP was lost.\n";
     }
 }
+// ====================================
+// Docker SQL Injection Training Menu
+// ====================================
+
+void TrainerApp::OpenDockerLabs()
+{
+    bool inMenu = true;
+
+    while (inMenu)
+    {
+        std::cout << "\n====================================\n";
+        std::cout << "       DOCKER TRAINING LAB\n";
+        std::cout << "====================================\n";
+
+        const bool connected = DockerLabClient::IsConnected();
+
+        std::cout << "Connection: "
+            << (connected ? "ONLINE" : "OFFLINE") << '\n';
+
+        std::cout << "Server: 127.0.0.1:8086\n";
+
+        std::cout << "====================================\n";
+        std::cout << "1. Check Docker Connection\n";
+        std::cout << "2. View SQL Injection Challenges\n";
+        std::cout << "3. View Docker Lab Status\n";
+        std::cout << "0. Return to Main Menu\n";
+        std::cout << "====================================\n";
+        std::cout << "Choice: ";
+
+        const int choice = GetValidatedChoice(0, 3);
+
+        switch (choice)
+        {
+        case 1:
+        {
+            if (DockerLabClient::IsConnected())
+            {
+                std::cout << "\nDocker connection successful!\n";
+            }
+            else
+            {
+                std::cout << "\nDocker connection failed.\n";
+                std::cout << "Make sure the C++ container is running.\n";
+            }
+
+            Pause();
+            break;
+        }
+
+        case 2:
+        {
+            std::string response;
+
+            if (DockerLabClient::GetChallenges(response))
+            {
+                std::cout << "\nAvailable Docker Challenges:\n";
+                std::cout << response << '\n';
+            }
+            else
+            {
+                std::cout << "\nUnable to retrieve challenges.\n";
+            }
+
+            Pause();
+            break;
+        }
+
+        case 3:
+        {
+            std::string response;
+
+            if (DockerLabClient::GetStatus(response))
+            {
+                std::cout << "\nDocker Lab Status:\n";
+                std::cout << response << '\n';
+            }
+            else
+            {
+                std::cout << "\nUnable to retrieve Docker status.\n";
+            }
+
+            Pause();
+            break;
+        }
+
+        case 0:
+            inMenu = false;
+            break;
+
+        default:
+            break;
+        }
+    }
+}
 
 // ====================================
 // Main Menu Choice Handling
@@ -1918,6 +2014,11 @@ void TrainerApp::HandleChoice(int choice)
                 << "Save your progress to keep this reward.\n";
         }
 
+        break;
+    }
+    case 12:
+    {
+        OpenDockerLabs();
         break;
     }
     case 9:
@@ -2140,7 +2241,7 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 11);
+            int choice = GetValidatedChoice(1, 12);
             HandleChoice(choice);
 
             // These screens handle their own pauses.

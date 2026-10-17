@@ -37,6 +37,9 @@ private:
     void DisplayMenu() const;
     void HandleChoice(int choice);
 
+    // Docker SQL Injection training.
+    void OpenDockerLabs();
+
     // Learning path.
     void DisplayLearningPath() const;
     void OpenLearningPath();

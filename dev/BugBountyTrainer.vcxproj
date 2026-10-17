@@ -139,6 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DockerLabClient.cpp" />
     <ClCompile Include="src\SaveManager.cpp" />
     <ClCompile Include="src\BugBountyTrainer.cpp" />
     <ClCompile Include="src\Challenge.cpp" />
@@ -150,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h" />
+    <ClInclude Include="include\DockerLabClient.h" />
     <ClInclude Include="include\Lab.h" />
     <ClInclude Include="include\Researcher.h" />
     <ClInclude Include="include\LearningModule.h" />
