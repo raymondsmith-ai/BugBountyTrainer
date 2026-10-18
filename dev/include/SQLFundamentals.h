@@ -318,11 +318,19 @@ public:
         while (open)
         {
             output << "\n========== SQL FUNDAMENTALS ==========\n";
-            output << "Stage 1 of the planned SQL injection course\n";
-            output << "Guided practice: "
-                << (guidedComplete ? "Complete" : "Not complete") << '\n';
+            output << "Stage 1 of the SQL Academy\n";
+
+            output << "Guided Practice: "
+                << (guidedComplete ? "Complete" : "Not Complete")
+                << '\n';
+
             output << "Assessment: "
-                << (assessmentComplete ? "Passed" : "Not passed") << '\n';
+                << (assessmentComplete ? "Passed" : "Not Passed")
+                << '\n';
+
+            output << "XP Reward: "
+                << (rewardClaimed ? "Claimed" : "Available after passing")
+                << '\n';
             output << "SQL progress is included when you save from the main menu.\n";
             output << "Assessment reward: 150 XP, awarded once when returning to the main menu.\n";
             output << "1. Read lesson\n";
