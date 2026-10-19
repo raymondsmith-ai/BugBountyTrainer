@@ -6,10 +6,13 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 
 #include "Database.h"
 #include "LessonManager.h"
+#include "LabManager.h"
 
 // ====================================
 // BugBountyTrainer SQL Injection Academy
@@ -20,6 +23,26 @@ namespace
 {
     constexpr int PORT = 8000;
     constexpr int BUFFER_SIZE = 4096;
+    // ====================================
+    // Read Website Files
+    // ====================================
+
+    std::string ReadWebFile(const std::string& filename)
+    {
+        std::ifstream file(
+            "/app/web/" + filename,
+            std::ios::binary);
+
+        if (!file.is_open())
+        {
+            return "";
+        }
+
+        std::ostringstream content;
+        content << file.rdbuf();
+
+        return content.str();
+    }
 
     // ====================================
     // Send HTTP Response
@@ -84,7 +107,7 @@ namespace
     // Handle Client HTTP Requests
     // ====================================
 
-    void HandleClient(int clientSocket)
+  void HandleClient(int clientSocket, sqlite3* database)
     {
         char buffer[BUFFER_SIZE] = {};
 
@@ -314,36 +337,111 @@ namespace
                 200);
         }
 
-        // ====================================
-        // Homepage
+	// ====================================
+	// Module 1: SQLite Guided Laboratories
+	// ====================================
+
+	else if (path == "/labs/1")
+	{
+	    SendResponse(
+	        clientSocket,
+	        LabManager::RunExercise(database, 1),
+	        "text/plain; charset=utf-8",
+	        200);
+}
+else if (path == "/labs/2")
+{
+    SendResponse(
+        clientSocket,
+        LabManager::RunExercise(database, 2),
+        "text/plain; charset=utf-8",
+        200);
+}
+else if (path == "/labs/3")
+{
+    SendResponse(
+        clientSocket,
+        LabManager::RunExercise(database, 3),
+        "text/plain; charset=utf-8",
+        200);
+}
+
+          // ====================================
+        // SQL Injection Academy Homepage
         // ====================================
 
         else if (path == "/")
         {
-            SendResponse(
-                clientSocket,
-                "<!DOCTYPE html>"
-                "<html lang=\"en\">"
-                "<head>"
-                "<meta charset=\"UTF-8\">"
-                "<title>BugBountyTrainer SQL Injection Academy</title>"
-                "</head>"
-                "<body>"
-                "<h1>BugBountyTrainer SQL Injection Academy</h1>"
-                "<h2>C++20 + SQLite3 + Docker</h2>"
-                "<p>Training server is online.</p>"
-                "<h3>Available Endpoints</h3>"
-                "<ul>"
-                "<li><a href=\"/health\">Health Check</a></li>"
-                "<li><a href=\"/status\">Server Status</a></li>"
-                "<li><a href=\"/challenges\">SQL Challenges</a></li>"
-                "<li><a href=\"/lessons\">Complete Course Catalog</a></li>"
-                "<li><a href=\"/lessons/1\">Module 1: Introduction to Databases</a></li>"
-                "</ul>"
-                "</body>"
-                "</html>",
-                "text/html; charset=utf-8",
-                200);
+            const std::string page = ReadWebFile("index.html");
+
+            if (page.empty())
+            {
+                SendResponse(
+                    clientSocket,
+                    "Website unavailable.",
+                    "text/plain",
+                    404);
+            }
+            else
+            {
+                SendResponse(
+                    clientSocket,
+                    page,
+                    "text/html; charset=utf-8",
+                    200);
+            }
+        }
+
+        // ====================================
+        // Website Stylesheet
+        // ====================================
+
+        else if (path == "/style.css")
+        {
+            const std::string stylesheet =
+                ReadWebFile("style.css");
+
+            if (stylesheet.empty())
+            {
+                SendResponse(
+                    clientSocket,
+                    "Stylesheet unavailable.",
+                    "text/plain",
+                    404);
+            }
+            else
+            {
+                SendResponse(
+                    clientSocket,
+                    stylesheet,
+                    "text/css; charset=utf-8",
+                    200);
+            }
+        }
+        // ====================================
+        // Website JavaScript
+        // ====================================
+
+        else if (path == "/app.js")
+        {
+            const std::string script = ReadWebFile("app.js");
+
+            if (script.empty())
+            {
+                SendResponse(
+                    clientSocket,
+                    "JavaScript unavailable.",
+                    "text/plain",
+                    404);
+            }
+            else
+            {
+                SendResponse(
+                    clientSocket,
+                    script,
+                    "application/javascript; charset=utf-8",
+                    200);
+            }
         }
 
         // ====================================
@@ -495,7 +593,7 @@ int main()
             continue;
         }
 
-        HandleClient(clientSocket);
+        HandleClient(clientSocket, trainingDatabase.GetConnection());
 
         close(clientSocket);
     }

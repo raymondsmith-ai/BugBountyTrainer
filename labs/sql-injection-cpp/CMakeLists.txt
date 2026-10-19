@@ -15,6 +15,7 @@ add_executable(
     main.cpp
     Database.cpp
     LessonManager.cpp
+    LabManager.cpp
 )
 
 # Link SQLite3 to the application.

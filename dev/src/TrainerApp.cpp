@@ -26,7 +26,7 @@ namespace
     {
         std::ifstream file(path);
         std::string version;
-        
+
         return std::getline(file, version) &&
             (version == "BBT_SAVE_V2" ||
                 version == "BBT_SAVE_V3" ||
@@ -77,26 +77,26 @@ namespace
         return saveFiles;
     }
 
-   
-        std::string SavedUserLabel(const std::filesystem::path & path)
+
+    std::string SavedUserLabel(const std::filesystem::path& path)
+    {
+        std::ifstream file(path);
+        std::string version;
+        std::string name;
+
+        if (std::getline(file, version) &&
+            (version == "BBT_SAVE_V2" ||
+                version == "BBT_SAVE_V3" ||
+                version == "BBT_SAVE_V4" ||
+                version == "BBT_SAVE_V5") &&
+            std::getline(file, name) &&
+            !name.empty())
         {
-            std::ifstream file(path);
-            std::string version;
-            std::string name;
-
-            if (std::getline(file, version) &&
-                (version == "BBT_SAVE_V2" ||
-                    version == "BBT_SAVE_V3" ||
-                    version == "BBT_SAVE_V4" ||
-                    version == "BBT_SAVE_V5") &&
-                std::getline(file, name) &&
-                !name.empty())
-            {
-                return name;
-            }
-
-            return path.filename().string() + " [unsupported or unreadable]";
+            return name;
         }
+
+        return path.filename().string() + " [unsupported or unreadable]";
+    }
 
     std::string GenerateValidationCode()
     {
@@ -708,9 +708,10 @@ void TrainerApp::DisplayMenu() const
     std::cout << "10. SQL Fundamentals (Stage 1)\n";
     std::cout << "11. SQL Injection Training (Stage 2)\n";
     std::cout << "12. Docker SQL Injection Labs\n";
+    std::cout << "13. SQL Academy (13 Modules)\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 12: ";
+    std::cout << "Enter a number from 1 to 13: ";
 }
 
 // ====================================
@@ -2021,6 +2022,11 @@ void TrainerApp::HandleChoice(int choice)
         OpenDockerLabs();
         break;
     }
+    case 13:
+    {
+        sqlAcademy.Run();
+        break;
+    }
     case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
@@ -2100,13 +2106,13 @@ bool TrainerApp::SelectSavedUser()
         saveFiles[choice - 1].string()))
     {
         std::cout << "\nUnable to load that save file.\n";
-        
+
         return false;
     }
 
     std::cout << "\nProgress loaded for " << researcher.GetName() << ".\n";
-     Pause();
-     return true;
+    Pause();
+    return true;
 }
 
 void TrainerApp::DeleteSavedUser()
@@ -2241,11 +2247,11 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 12);
+            int choice = GetValidatedChoice(1, 13);
             HandleChoice(choice);
 
             // These screens handle their own pauses.
-            if (running && choice != 2 && choice != 3 && choice != 6 && choice != 10)
+            if (running && choice != 2 && choice != 3 && choice != 6 && choice != 10 && choice != 13)
             {
                 Pause();
             }

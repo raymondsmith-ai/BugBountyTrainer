@@ -3,7 +3,7 @@
 #include <limits>
 
 // ====================================
-// SQL Injection Fundamentals
+// SQL Injection Fundamentals Lesson
 // ====================================
 
 void SQLInjection::DisplayLesson() const
@@ -14,64 +14,158 @@ void SQLInjection::DisplayLesson() const
 
     std::cout << R"(
 
-WHAT IS SQL INJECTION?
+LESSON 1: WHAT IS SQL INJECTION?
 
-SQL injection is a security vulnerability
-that occurs when an application allows
-untrusted input to alter an SQL query.
+SQL injection (SQLi) is a vulnerability
+that occurs when untrusted input changes
+the structure or behavior of an SQL query.
 
-HOW DOES IT HAPPEN?
+SQL injection typically occurs when an
+application builds SQL statements by
+combining SQL syntax with user input.
 
-An application may construct SQL queries
-by combining SQL statements with user input.
+------------------------------------
+LESSON 2: HOW SQL INJECTION OCCURS
+------------------------------------
 
-If the input is not handled securely,
-it may change the intended query logic.
+Consider an application that searches
+for a user by username.
 
-EXAMPLE OF UNSAFE CODE:
+An unsafe C++ implementation might use:
 
 std::string sql =
     "SELECT * FROM users WHERE name = '"
     + username + "'";
 
-This example builds a query through
-string concatenation.
+The application inserts the username
+directly into the SQL statement.
 
-WHY IS THIS DANGEROUS?
+If the username contains SQL syntax,
+the resulting query may behave
+differently than intended.
 
-Depending on the application, SQL injection
-may allow unauthorized access to records,
-bypass intended filtering, or expose data.
+This can cause unauthorized records
+to be returned or security checks
+to be bypassed.
 
-HOW DO WE PREVENT IT?
+------------------------------------
+LESSON 3: UNDERSTANDING QUERY LOGIC
+------------------------------------
 
-Use parameterized queries.
+A normal SQL query might look like:
 
-EXAMPLE:
+SELECT * FROM users
+WHERE name = 'student';
+
+The WHERE clause limits which records
+are returned.
+
+SQL injection can occur when user input
+changes the intended WHERE condition.
+
+In BugBountyTrainer, we demonstrate
+this using fictional product records
+inside an isolated Docker lab.
+
+------------------------------------
+LESSON 4: PARAMETERIZED QUERIES
+------------------------------------
+
+The primary defense against SQL injection
+is to use parameterized queries.
+
+Example:
 
 SELECT * FROM users WHERE name = ?
 
-The question mark represents a bound value.
+The question mark is a placeholder.
 
-The database treats the supplied value as
-data rather than executable SQL syntax.
+The application binds the username as
+a value instead of inserting it directly
+into SQL syntax.
 
-OTHER SECURITY PRACTICES:
+SQLite C++ example:
 
-1. Apply least-privilege database permissions.
-2. Validate input according to business rules.
-3. Avoid exposing detailed database errors.
-4. Test only systems you own or are authorized
+sqlite3_stmt* statement = nullptr;
+
+sqlite3_prepare_v2(
+    database,
+    "SELECT * FROM users WHERE name = ?",
+    -1,
+    &statement,
+    nullptr);
+
+sqlite3_bind_text(
+    statement,
+    1,
+    username.c_str(),
+    -1,
+    SQLITE_TRANSIENT);
+
+sqlite3_step(statement);
+sqlite3_finalize(statement);
+
+The username is treated as data,
+not executable SQL syntax.
+
+Production applications must also
+check SQLite return codes and handle
+database errors appropriately.
+
+------------------------------------
+LESSON 5: ADDITIONAL DEFENSES
+------------------------------------
+
+1. Use prepared statements.
+
+2. Apply least-privilege permissions
+   to database accounts.
+
+3. Validate input according to
+   application requirements.
+
+4. Avoid displaying detailed database
+   errors to end users.
+
+5. Keep database software updated.
+
+6. Test only applications you own
+   or have explicit authorization
    to assess.
 
-HANDS-ON PRACTICE:
+------------------------------------
+LESSON 6: HANDS-ON PRACTICE
+------------------------------------
 
-BugBountyTrainer provides a local Docker
-environment with fictional product records.
+BugBountyTrainer includes a local
+Docker SQL injection training lab.
 
-The lab demonstrates the difference between
-unsafe SQL construction and parameterized
-queries.
+The lab uses fictional records.
+
+Students can compare:
+
+- Unsafe SQL query construction
+- Parameterized SQL queries
+- Intended query results
+- Unexpected query behavior
+
+The purpose is to understand why
+SQL injection occurs and how secure
+query construction prevents it.
+
+------------------------------------
+LESSON SUMMARY
+------------------------------------
+
+SQL injection occurs when untrusted
+input changes SQL query structure.
+
+Parameterized queries separate
+SQL syntax from user-supplied values.
+
+Secure database permissions and
+proper error handling provide
+additional protection.
 
 )";
 }
@@ -82,18 +176,13 @@ queries.
 
 bool SQLInjection::RunAssessment()
 {
-    int answer = 0;
     int score = 0;
-
-    std::cout << "\n====================================\n";
-    std::cout << "      SQL INJECTION ASSESSMENT\n";
-    std::cout << "====================================\n";
 
     const std::string questions[3] =
     {
         "What is the main cause of SQL injection?",
         "Which technique helps prevent SQL injection?",
-        "What should happen to untrusted input?"
+        "How should untrusted input be handled?"
     };
 
     const std::string options[3][3] =
@@ -106,51 +195,74 @@ bool SQLInjection::RunAssessment()
         {
             "1. String concatenation",
             "2. Parameterized queries",
-            "3. Displaying database errors"
+            "3. Displaying detailed database errors"
         },
         {
-            "1. Be inserted directly into SQL statements",
-            "2. Be treated as executable SQL",
-            "3. Be handled as data"
+            "1. Insert it directly into SQL statements",
+            "2. Treat it as executable SQL",
+            "3. Handle it as data"
         }
     };
 
     const int correctAnswers[3] = { 2, 2, 3 };
 
-    for (int i = 0; i < 3; i++)
-    {
-        std::cout << "\n" << questions[i] << "\n\n";
+    std::cout << "\n====================================\n";
+    std::cout << "      SQL INJECTION ASSESSMENT\n";
+    std::cout << "====================================\n";
 
-        for (int j = 0; j < 3; j++)
+    for (int i = 0; i < 3; ++i)
+    {
+        std::cout << "\nQuestion " << (i + 1)
+            << ": " << questions[i] << "\n\n";
+
+        for (int j = 0; j < 3; ++j)
         {
             std::cout << options[i][j] << '\n';
         }
 
-        std::cout << "\nAnswer: ";
+        int answer = 0;
 
-        if (!(std::cin >> answer))
+        while (true)
         {
-            std::cin.clear();
+            std::cout << "\nAnswer (1-3): ";
+
+            if (!(std::cin >> answer))
+            {
+                std::cin.clear();
+
+                std::cin.ignore(
+                    std::numeric_limits<std::streamsize>::max(),
+                    '\n');
+
+                std::cout << "Invalid input. Enter 1, 2, or 3.\n";
+                continue;
+            }
+
             std::cin.ignore(
                 std::numeric_limits<std::streamsize>::max(),
                 '\n');
 
-            std::cout << "Invalid input.\n";
-            return false;
-        }
+            if (answer >= 1 && answer <= 3)
+            {
+                break;
+            }
 
-        std::cin.ignore(
-            std::numeric_limits<std::streamsize>::max(),
-            '\n');
+            std::cout << "Enter a number between 1 and 3.\n";
+        }
 
         if (answer == correctAnswers[i])
         {
-            score++;
+            ++score;
+            std::cout << "Correct!\n";
+        }
+        else
+        {
+            std::cout << "Incorrect.\n";
         }
     }
 
     std::cout << "\nAssessment Score: "
-              << score << "/3\n";
+        << score << "/3\n";
 
     if (score == 3)
     {
@@ -165,7 +277,7 @@ bool SQLInjection::RunAssessment()
 }
 
 // ====================================
-// SQL Injection Menu
+// SQL Injection Training Menu
 // ====================================
 
 void SQLInjection::Run()
@@ -179,12 +291,16 @@ void SQLInjection::Run()
         std::cout << "====================================\n";
 
         std::cout << "Lesson: "
-                  << (lessonComplete ? "Completed" : "Not completed")
-                  << '\n';
+            << (lessonComplete ? "Completed" : "Not completed")
+            << '\n';
 
         std::cout << "Assessment: "
-                  << (assessmentComplete ? "Passed" : "Not passed")
-                  << '\n';
+            << (assessmentComplete ? "Passed" : "Not passed")
+            << '\n';
+
+        std::cout << "XP Reward: "
+            << (rewardClaimed ? "Claimed" : "Not claimed")
+            << '\n';
 
         std::cout << "\n1. Read SQL Injection Lesson\n";
         std::cout << "2. Take Assessment\n";
@@ -197,6 +313,7 @@ void SQLInjection::Run()
         if (!(std::cin >> choice))
         {
             std::cin.clear();
+
             std::cin.ignore(
                 std::numeric_limits<std::streamsize>::max(),
                 '\n');

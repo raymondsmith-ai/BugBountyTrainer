@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>BugBountyTrainer | SQL Injection Academy</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <aside class="sidebar">
+
+            <div class="brand">
+                <h2>BUG BOUNTY TRAINER</h2>
+                <p>SQL Injection Academy</p>
+            </div>
+
+            <nav>
+                <button id="dashboardBtn" type="button">
+                    Dashboard
+                </button>
+
+                <button id="modulesBtn" type="button">
+                    Learning Modules
+                </button>
+
+                <button id="labsBtn" type="button">
+                    Hands-On Labs
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>C++20 + SQLite + Docker</p>
+                <p id="serverStatus">Checking server...</p>
+            </div>
+
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <h1>SQL Injection Academy</h1>
+                <span class="badge">LOCAL TRAINING ENVIRONMENT</span>
+            </header>
+
+            <section class="welcome-card">
+
+                <h2>Welcome to SQL Injection Training</h2>
+
+                <p>
+                    Learn SQL and ethical security testing from beginner
+                    to intermediate through structured lessons and
+                    hands-on laboratories.
+                </p>
+
+                <div class="stats">
+
+                    <div class="stat-card">
+                        <h3>13</h3>
+                        <p>Learning Modules</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>3</h3>
+                        <p>Available Guided Labs</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>C++20</h3>
+                        <p>Training Backend</p>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section id="dashboardView">
+
+                <h2>Learning Path</h2>
+
+                <div id="moduleList" class="module-grid">
+                    Loading modules...
+                </div>
+
+            </section>
+
+            <section id="lessonView" class="hidden">
+
+                <button id="backBtn" class="secondary-button" type="button">
+                    Back to Learning Path
+                </button>
+
+                <div id="lessonContent"></div>
+
+            </section>
+
+            <section id="labView" class="hidden">
+
+                <h2>Hands-On SQL Laboratory</h2>
+
+                <p>
+                    Explore the fictional products database using
+                    guided SQL exercises.
+                </p>
+
+                <div class="lab-buttons">
+
+                    <button type="button" data-lab="1">
+                        Lab 1: View Products
+                    </button>
+
+                    <button type="button" data-lab="2">
+                        Lab 2: Select Columns
+                    </button>
+
+                    <button type="button" data-lab="3">
+                        Lab 3: Filter Products
+                    </button>
+
+                </div>
+
+                <pre id="labOutput">Select a laboratory to begin.</pre>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="/app.js"></script>
+
+</body>
+</html>

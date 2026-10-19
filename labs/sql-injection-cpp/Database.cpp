@@ -175,3 +175,11 @@ bool Database::IsConnected() const
 {
     return database != nullptr;
 }
+// ====================================
+// Get SQLite Connection
+// ====================================
+
+sqlite3* Database::GetConnection() const
+{
+    return database;
+}

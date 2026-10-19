@@ -19,6 +19,8 @@ COPY Database.h .
 COPY Database.cpp .
 COPY LessonManager.h .
 COPY LessonManager.cpp .
+COPY LabManager.h .
+COPY LabManager.cpp .
 
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build --parallel 2
@@ -37,6 +39,9 @@ RUN apt-get update && \
 WORKDIR /app
 
 COPY --from=builder /app/build/bbt_sql_lab /app/bbt_sql_lab
+
+# Copy the SQL Injection Academy website.
+COPY web/ /app/web/
 
 RUN useradd --system --no-create-home labuser
 

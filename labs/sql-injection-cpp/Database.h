@@ -34,4 +34,7 @@ public:
 
     // Check database availability.
     bool IsConnected() const;
+
+    // Provide access to the SQLite connection.
+    sqlite3* GetConnection() const;
 };
