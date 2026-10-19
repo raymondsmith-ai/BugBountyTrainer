@@ -31,7 +31,8 @@ namespace
             (version == "BBT_SAVE_V2" ||
                 version == "BBT_SAVE_V3" ||
                 version == "BBT_SAVE_V4" ||
-                version == "BBT_SAVE_V5");
+                version == "BBT_SAVE_V5" ||
+                version == "BBT_SAVE_V6");
     }
 
     std::vector<std::filesystem::path> FindSaveFiles(bool supportedOnly)
@@ -77,26 +78,26 @@ namespace
         return saveFiles;
     }
 
-
-    std::string SavedUserLabel(const std::filesystem::path& path)
-    {
-        std::ifstream file(path);
-        std::string version;
-        std::string name;
-
-        if (std::getline(file, version) &&
-            (version == "BBT_SAVE_V2" ||
-                version == "BBT_SAVE_V3" ||
-                version == "BBT_SAVE_V4" ||
-                version == "BBT_SAVE_V5") &&
-            std::getline(file, name) &&
-            !name.empty())
+   
+        std::string SavedUserLabel(const std::filesystem::path & path)
         {
-            return name;
-        }
+            std::ifstream file(path);
+            std::string version;
+            std::string name;
+            if (std::getline(file, version) &&
+                (version == "BBT_SAVE_V2" ||
+                    version == "BBT_SAVE_V3" ||
+                    version == "BBT_SAVE_V4" ||
+                    version == "BBT_SAVE_V5" ||
+                    version == "BBT_SAVE_V6") &&
+                std::getline(file, name) &&
+                !name.empty())
+            {
+                return name;
+            }
 
-        return path.filename().string() + " [unsupported or unreadable]";
-    }
+            return path.filename().string() + " [unsupported or unreadable]";
+        }
 
     std::string GenerateValidationCode()
     {
@@ -2024,7 +2025,30 @@ void TrainerApp::HandleChoice(int choice)
     }
     case 13:
     {
+        // Record completion before this academy visit so XP is awarded
+        // only for modules newly completed during this session.
+        const std::vector<SQLLesson>& lessons = sqlAcademy.GetLessons();
+        std::vector<bool> previouslyCompleted;
+        previouslyCompleted.reserve(lessons.size());
+        for (const SQLLesson& lesson : lessons)
+        {
+            previouslyCompleted.push_back(lesson.completed);
+        }
+
         sqlAcademy.Run();
+
+        const std::vector<SQLLesson>& updatedLessons = sqlAcademy.GetLessons();
+        for (std::size_t i = 0; i < updatedLessons.size(); ++i)
+        {
+            if (!previouslyCompleted[i] && updatedLessons[i].completed)
+            {
+                researcher.AddXP(updatedLessons[i].xpReward);
+                std::cout << "\nSQL Academy: " << updatedLessons[i].title
+                    << " completed! Earned " << updatedLessons[i].xpReward
+                    << " XP.\n";
+                std::cout << "Save your progress to keep this reward.\n";
+            }
+        }
         break;
     }
     case 9:
@@ -2103,16 +2127,17 @@ bool TrainerApp::SelectSavedUser()
         learningModules,
         sqlFundamentals,
         sqlInjection,
+        sqlAcademy,
         saveFiles[choice - 1].string()))
     {
         std::cout << "\nUnable to load that save file.\n";
-
+        
         return false;
     }
 
     std::cout << "\nProgress loaded for " << researcher.GetName() << ".\n";
-    Pause();
-    return true;
+     Pause();
+     return true;
 }
 
 void TrainerApp::DeleteSavedUser()
@@ -2379,6 +2404,7 @@ void TrainerApp::SaveProgress()
         learningModules,
         sqlFundamentals,
         sqlInjection,
+        sqlAcademy,
         filename))
     {
         std::cout << "\nProgress saved successfully!\n";
@@ -2408,6 +2434,7 @@ void TrainerApp::LoadProgress()
         learningModules,
         sqlFundamentals,
         sqlInjection,
+        sqlAcademy,
         filename))
     {
         std::cout << "\nProgress restored successfully!\n";
