@@ -2277,6 +2277,27 @@ bool TrainerApp::StartSession()
     return false;
 }
 
+// ====================================
+// Menu Pause Handling
+// ====================================
+
+// Returns true when a menu option manages
+// its own pause or navigation flow.
+static bool HandlesOwnPause(int choice)
+{
+    switch (choice)
+    {
+    case 2:  // Learning Path
+    case 3:  // Hands-On Labs
+    case 6:  // Vulnerability Categories
+    case 10: // SQL Fundamentals
+    case 13: // SQL Academy
+        return true;
+
+    default:
+        return false;
+    }
+}
 
 void TrainerApp::Run()
 {
@@ -2293,8 +2314,9 @@ void TrainerApp::Run()
             int choice = GetValidatedChoice(1, 13);
             HandleChoice(choice);
 
-            // These screens handle their own pauses.
-            if (running && choice != 2 && choice != 3 && choice != 6 && choice != 10 && choice != 13)
+            // Pause only when the selected screen
+        // does not manage its own pause.
+            if (running && !HandlesOwnPause(choice))
             {
                 Pause();
             }
