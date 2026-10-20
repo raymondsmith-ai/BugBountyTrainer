@@ -8,6 +8,7 @@
 #include "LearningModule.h"
 #include "SQLFundamentals.h"
 #include "SQLInjection.h"
+#include "SQLAcademy.h"
 
 // ====================================
 // SaveManager Class
@@ -16,7 +17,7 @@
 // completed challenges, learning modules,
 // SQL Fundamentals, and SQL Injection.
 //
-// Supports BBT_SAVE_V2 through BBT_SAVE_V5.
+// Supports BBT_SAVE_V2 through BBT_SAVE_V6.
 // ====================================
 
 class SaveManager
@@ -31,6 +32,7 @@ public:
     // learning module progression,
     // SQL Fundamentals progress,
     // SQL Injection Stage 2 progress,
+    // SQL Academy completion,
     // and one-time reward tracking.
     // ====================================
 
@@ -40,6 +42,7 @@ public:
         const std::vector<LearningModule>& learningModules,
         const SQLFundamentals& sqlFundamentals,
         const SQLInjection& sqlInjection,
+        const SQLAcademy& sqlAcademy,
         const std::string& filename);
 
     // ====================================
@@ -61,5 +64,6 @@ public:
         std::vector<LearningModule>& learningModules,
         SQLFundamentals& sqlFundamentals,
         SQLInjection& sqlInjection,
+        SQLAcademy& sqlAcademy,
         const std::string& filename);
 };

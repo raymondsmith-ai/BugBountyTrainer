@@ -16,6 +16,7 @@ bool SaveManager::SaveProgress(
     const std::vector<LearningModule>& learningModules,
     const SQLFundamentals& sqlFundamentals,
     const SQLInjection& sqlInjection,
+    const SQLAcademy& sqlAcademy,
     const std::string& filename)
 {
     std::ofstream file(filename);
@@ -30,7 +31,7 @@ bool SaveManager::SaveProgress(
     // Save File Version
     // ====================================
 
-    file << "BBT_SAVE_V5\n";
+    file << "BBT_SAVE_V6\n";
 
     // ====================================
     // Save Researcher Information
@@ -81,6 +82,19 @@ bool SaveManager::SaveProgress(
         << sqlInjection.IsRewardClaimed() << '\n';
 
     // ====================================
+    // Save SQL Academy Completion (V6)
+    // Store IDs to detect curriculum changes.
+    // ====================================
+
+    const std::vector<SQLLesson>& academyLessons = sqlAcademy.GetLessons();
+    file << academyLessons.size() << '\n';
+
+    for (const SQLLesson& lesson : academyLessons)
+    {
+        file << lesson.id << ' ' << lesson.completed << '\n';
+    }
+
+    // ====================================
     // Close File and Check for Errors
     // ====================================
 
@@ -106,6 +120,7 @@ bool SaveManager::LoadProgress(
     std::vector<LearningModule>& learningModules,
     SQLFundamentals& sqlFundamentals,
     SQLInjection& sqlInjection,
+    SQLAcademy& sqlAcademy,
     const std::string& filename)
 {
     std::ifstream file(filename);
@@ -135,7 +150,8 @@ bool SaveManager::LoadProgress(
         (version != "BBT_SAVE_V2" &&
             version != "BBT_SAVE_V3" &&
             version != "BBT_SAVE_V4" &&
-            version != "BBT_SAVE_V5"))
+            version != "BBT_SAVE_V5" &&
+            version != "BBT_SAVE_V6"))
     {
         std::cout << "\nUnsupported save file format.\n";
         return false;
@@ -254,7 +270,8 @@ bool SaveManager::LoadProgress(
 
     if (version == "BBT_SAVE_V3" ||
         version == "BBT_SAVE_V4" ||
-        version == "BBT_SAVE_V5")
+        version == "BBT_SAVE_V5" ||
+        version == "BBT_SAVE_V6")
     {
         if (!(file >> savedGuided >> savedAssessment) ||
             (savedGuided != 0 && savedGuided != 1) ||
@@ -272,7 +289,8 @@ bool SaveManager::LoadProgress(
     // ====================================
 
     if (version == "BBT_SAVE_V4" ||
-        version == "BBT_SAVE_V5")
+        version == "BBT_SAVE_V5" ||
+        version == "BBT_SAVE_V6")
     {
         if (!(file >> savedRewardClaimed) ||
             (savedRewardClaimed != 0 &&
@@ -298,7 +316,8 @@ bool SaveManager::LoadProgress(
     // V5 Only
     // ====================================
 
-    if (version == "BBT_SAVE_V5")
+    if (version == "BBT_SAVE_V5" ||
+        version == "BBT_SAVE_V6")
     {
         if (!(file >> savedInjectionLesson
             >> savedInjectionAssessment
@@ -319,6 +338,61 @@ bool SaveManager::LoadProgress(
         }
     }
 
+    // ====================================
+    // Read SQL Academy Completion (V6)
+    // Older saves start with all academy modules incomplete.
+    // ====================================
+
+    const std::vector<SQLLesson>& academyLessons = sqlAcademy.GetLessons();
+    std::vector<bool> savedAcademyCompletion(academyLessons.size(), false);
+
+    if (version == "BBT_SAVE_V6")
+    {
+        std::size_t academyCount = 0;
+        if (!(file >> academyCount) || academyCount != academyLessons.size())
+        {
+            std::cout << "\nInvalid SQL Academy module count.\n";
+            return false;
+        }
+
+        for (std::size_t i = 0; i < academyCount; ++i)
+        {
+            int lessonId = 0;
+            int completed = 0;
+            if (!(file >> lessonId >> completed) ||
+                lessonId != academyLessons[i].id ||
+                (completed != 0 && completed != 1) ||
+                (completed == 1 && i > 0 && !savedAcademyCompletion[i - 1]))
+            {
+                std::cout << "\nInvalid SQL Academy progress.\n";
+                return false;
+            }
+            savedAcademyCompletion[i] = (completed == 1);
+        }
+    }
+    // ====================================
+// Validate End of Save File
+// ====================================
+
+    file >> std::ws;
+
+    if (file.bad())
+    {
+        std::cout << "\nError reading save file.\n";
+        return false;
+    }
+
+    if (file.peek() != std::char_traits<char>::eof())
+    {
+        std::cout << "\nUnexpected data found in save file.\n";
+        return false;
+    }
+
+    if (file.bad())
+    {
+        std::cout << "\nError reading save file.\n";
+        return false;
+    }
     // ====================================
     // Restore Researcher Progress
     // ====================================
@@ -384,6 +458,13 @@ bool SaveManager::LoadProgress(
         savedInjectionLesson == 1,
         savedInjectionAssessment == 1,
         savedInjectionReward == 1);
+
+    // Restore academy completion without granting XP.
+    for (std::size_t i = 0; i < academyLessons.size(); ++i)
+    {
+        sqlAcademy.RestoreLessonCompletion(
+            academyLessons[i].id, savedAcademyCompletion[i]);
+    }
 
     return true;
 }

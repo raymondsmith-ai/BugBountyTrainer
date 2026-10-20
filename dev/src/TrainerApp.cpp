@@ -51,11 +51,29 @@ namespace
             {
                 const std::string filename = path.filename().string();
                 const bool isLegacySave = filename == "researcher_save.txt";
-                const bool isUserSave =
+                const bool hasValidFilename =
                     filename.rfind(prefix, 0) == 0 &&
                     filename.size() > prefix.size() + suffix.size() &&
                     filename.compare(filename.size() - suffix.size(),
                         suffix.size(), suffix) == 0;
+
+                bool hasValidUsername = false;
+
+                if (hasValidFilename)
+                {
+                    const std::string username = filename.substr(
+                        prefix.size(),
+                        filename.size() - prefix.size() - suffix.size());
+
+                    hasValidUsername = !username.empty() &&
+                        std::all_of(username.begin(), username.end(),
+                            [](unsigned char ch)
+                            {
+                                return std::isalnum(ch) || ch == '-' || ch == '_';
+                            });
+                }
+
+                const bool isUserSave = hasValidFilename && hasValidUsername;
 
                 if ((isLegacySave || isUserSave) &&
                     (!supportedOnly || HasSupportedSaveFormat(path)))

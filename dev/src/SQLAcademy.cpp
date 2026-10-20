@@ -1325,7 +1325,7 @@ void SQLAcademy::RunAssessment(std::size_t lessonIndex)
         std::cout << "Module Completed: " << lesson.title << '\n';
         std::cout << "Configured XP Reward: "
             << lesson.xpReward << " XP\n";
-        std::cout << "Researcher XP integration is pending.\n";
+        std::cout << "XP will be awarded when you return to BugBountyTrainer.\n";
 
         if (lessonIndex + 1 < lessons.size())
         {
