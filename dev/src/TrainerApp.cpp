@@ -1,5 +1,6 @@
 #include "../include/TrainerApp.h"
 #include "../include/SaveManager.h"
+#include "../include/SavedUserManager.h"
 
 #include <iostream>
 #include <string>
@@ -22,100 +23,7 @@
 // for each question during this application session, including retakes.
 namespace
 {
-    bool HasSupportedSaveFormat(const std::filesystem::path& path)
-    {
-        std::ifstream file(path);
-        std::string version;
 
-        return std::getline(file, version) &&
-            (version == "BBT_SAVE_V2" ||
-                version == "BBT_SAVE_V3" ||
-                version == "BBT_SAVE_V4" ||
-                version == "BBT_SAVE_V5" ||
-                version == "BBT_SAVE_V6");
-    }
-
-    std::vector<std::filesystem::path> FindSaveFiles(bool supportedOnly)
-    {
-        const std::string prefix = "researcher_save_";
-        const std::string suffix = ".txt";
-        std::vector<std::filesystem::path> saveFiles;
-        std::error_code error;
-        std::filesystem::directory_iterator entry(".", error);
-        const std::filesystem::directory_iterator end;
-
-        while (!error && entry != end)
-        {
-            const std::filesystem::path path = entry->path();
-            if (entry->is_regular_file(error) && !entry->is_symlink(error))
-            {
-                const std::string filename = path.filename().string();
-                const bool isLegacySave = filename == "researcher_save.txt";
-                const bool hasValidFilename =
-                    filename.rfind(prefix, 0) == 0 &&
-                    filename.size() > prefix.size() + suffix.size() &&
-                    filename.compare(filename.size() - suffix.size(),
-                        suffix.size(), suffix) == 0;
-
-                bool hasValidUsername = false;
-
-                if (hasValidFilename)
-                {
-                    const std::string username = filename.substr(
-                        prefix.size(),
-                        filename.size() - prefix.size() - suffix.size());
-
-                    hasValidUsername = !username.empty() &&
-                        std::all_of(username.begin(), username.end(),
-                            [](unsigned char ch)
-                            {
-                                return std::isalnum(ch) || ch == '-' || ch == '_';
-                            });
-                }
-
-                const bool isUserSave = hasValidFilename && hasValidUsername;
-
-                if ((isLegacySave || isUserSave) &&
-                    (!supportedOnly || HasSupportedSaveFormat(path)))
-                {
-                    saveFiles.push_back(path);
-                }
-            }
-            if (!error)
-            {
-                entry.increment(error);
-            }
-        }
-
-        if (error)
-        {
-            throw std::runtime_error("Unable to read the saved-user folder.");
-        }
-
-        std::sort(saveFiles.begin(), saveFiles.end());
-        return saveFiles;
-    }
-
-   
-        std::string SavedUserLabel(const std::filesystem::path & path)
-        {
-            std::ifstream file(path);
-            std::string version;
-            std::string name;
-            if (std::getline(file, version) &&
-                (version == "BBT_SAVE_V2" ||
-                    version == "BBT_SAVE_V3" ||
-                    version == "BBT_SAVE_V4" ||
-                    version == "BBT_SAVE_V5" ||
-                    version == "BBT_SAVE_V6") &&
-                std::getline(file, name) &&
-                !name.empty())
-            {
-                return name;
-            }
-
-            return path.filename().string() + " [unsupported or unreadable]";
-        }
 
     std::string GenerateValidationCode()
     {
@@ -137,31 +45,6 @@ namespace
         return code;
     }
 
-    std::string SaveFilenameFor(const std::string& name)
-    {
-        std::string safeName;
-        for (unsigned char ch : name)
-        {
-            if (std::isalnum(ch) || ch == '-' || ch == '_')
-            {
-                safeName += static_cast<char>(ch);
-            }
-            else if (safeName.empty() || safeName.back() != '_')
-            {
-                safeName += '_';
-            }
-        }
-
-        while (!safeName.empty() && safeName.back() == '_')
-        {
-            safeName.pop_back();
-        }
-        if (safeName.empty())
-        {
-            safeName = "Researcher";
-        }
-        return "researcher_save_" + safeName + ".txt";
-    }
 
     std::mt19937& AssessmentRng()
     {
@@ -2116,7 +1999,7 @@ void TrainerApp::OpenOptions()
 bool TrainerApp::SelectSavedUser()
 {
 
-    const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(true);
+    const std::vector<std::filesystem::path> saveFiles = SavedUserManager::FindSaveFiles(true);
 
     if (saveFiles.empty())
     {
@@ -2128,7 +2011,7 @@ bool TrainerApp::SelectSavedUser()
     std::cout << "\nAvailable saved users:\n";
     for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
     {
-        std::cout << i + 1 << ". " << SavedUserLabel(saveFiles[i]) << '\n';
+        std::cout << i + 1 << ". " << SavedUserManager::SavedUserLabel(saveFiles[i]) << '\n';
     }
 
     std::cout << "0. Return to startup menu\n";
@@ -2149,18 +2032,18 @@ bool TrainerApp::SelectSavedUser()
         saveFiles[choice - 1].string()))
     {
         std::cout << "\nUnable to load that save file.\n";
-        
+
         return false;
     }
 
     std::cout << "\nProgress loaded for " << researcher.GetName() << ".\n";
-     Pause();
-     return true;
+    Pause();
+    return true;
 }
 
 void TrainerApp::DeleteSavedUser()
 {
-    const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(false);
+    const std::vector<std::filesystem::path> saveFiles = SavedUserManager::FindSaveFiles(false);
 
     if (saveFiles.empty())
     {
@@ -2172,7 +2055,7 @@ void TrainerApp::DeleteSavedUser()
     std::cout << "\nSaved-user files available to delete:\n";
     for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
     {
-        std::cout << i + 1 << ". " << SavedUserLabel(saveFiles[i])
+        std::cout << i + 1 << ". " << SavedUserManager::SavedUserLabel(saveFiles[i])
             << " (" << saveFiles[i].filename().string() << ")\n";
     }
 
@@ -2186,7 +2069,7 @@ void TrainerApp::DeleteSavedUser()
     }
 
     const std::filesystem::path selectedFile = saveFiles[choice - 1];
-    std::cout << "\nDelete " << SavedUserLabel(selectedFile) << "?\n";
+    std::cout << "\nDelete " << SavedUserManager::SavedUserLabel(selectedFile) << "?\n";
     std::cout << "File: " << selectedFile.filename().string() << '\n';
     std::cout << "This permanently removes this save file.\n";
     std::cout << "1. Delete\n2. Cancel\nChoice: ";
@@ -2431,7 +2314,7 @@ void TrainerApp::BrowseCategories()
 
 void TrainerApp::SaveProgress()
 {
-    const std::string filename = SaveFilenameFor(researcher.GetName());
+    const std::string filename = SavedUserManager::SaveFilenameFor(researcher.GetName());
 
     std::cout << "\n====================================\n";
     std::cout << "          SAVE PROGRESS\n";
@@ -2461,7 +2344,7 @@ void TrainerApp::SaveProgress()
 
 void TrainerApp::LoadProgress()
 {
-    const std::string filename = SaveFilenameFor(researcher.GetName());
+    const std::string filename = SavedUserManager::SaveFilenameFor(researcher.GetName());
 
     std::cout << "\n====================================\n";
     std::cout << "          LOAD PROGRESS\n";

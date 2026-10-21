@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\labs\sql-injection-cpp\LessonManager.cpp" />
+    <ClCompile Include="src\SavedUserManager.cpp" />
     <ClCompile Include="src\SQLAcademy.cpp" />
     <ClCompile Include="src\DockerLabClient.cpp" />
     <ClCompile Include="src\SaveManager.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="include\Lab.h" />
     <ClInclude Include="include\Researcher.h" />
     <ClInclude Include="include\LearningModule.h" />
+    <ClInclude Include="include\SavedUserManager.h" />
     <ClInclude Include="include\SQLFundamentals.h" />
     <ClInclude Include="include\SQLInjection.h" />
     <ClInclude Include="include\TrainerApp.h" />
