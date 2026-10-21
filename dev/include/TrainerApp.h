@@ -72,6 +72,7 @@ private:
 
     void DisplayMenu() const;
     void HandleChoice(int choice);
+    void DisplayResearcherStatistics() const;
 
     // ====================================
     // Docker SQL Injection Labs
@@ -83,7 +84,6 @@ private:
     // Learning Path
     // ====================================
 
-    void DisplayLearningPath() const;
     void OpenLearningPath();
 
     // ====================================
