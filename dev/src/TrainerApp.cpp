@@ -402,9 +402,10 @@ void TrainerApp::DisplayMenu() const
     std::cout << "11. SQL Injection Training (Stage 2)\n";
     std::cout << "12. Docker SQL Injection Labs\n";
     std::cout << "13. SQL Academy (13 Modules)\n";
+    std::cout << "14. View Researcher Statistics\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 13: ";
+    std::cout << "Enter a number from 1 to 14: ";
 }
 
 // ====================================
@@ -1233,13 +1234,17 @@ void TrainerApp::OpenDockerLabs()
 // Main Menu Choice Handling
 // ====================================
 
-void TrainerApp::HandleChoice(int choice)
-{
-    switch (choice)
-    {
-    case 1:
-        researcher.DisplayProfile();
-        break;
+        void TrainerApp::HandleChoice(int choice)
+        {
+            switch (choice)
+            {
+            case 1:
+                researcher.DisplayProfile();
+                break;
+
+            case 14:
+                DisplayResearcherStatistics();
+                break;
     case 2:
         OpenLearningPath();
         break;
@@ -1571,7 +1576,7 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 13);
+            int choice = GetValidatedChoice(1, 14);
             HandleChoice(choice);
 
             // Pause only when the selected screen
