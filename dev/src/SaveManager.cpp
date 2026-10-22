@@ -1,6 +1,8 @@
 #include "../include/SaveManager.h"
 
 #include <fstream>
+#include <iomanip>
+#include <utility>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -31,7 +33,7 @@ bool SaveManager::SaveProgress(
     // Save File Version
     // ====================================
 
-    file << "BBT_SAVE_V6\n";
+    file << "BBT_SAVE_V7\n";
 
     // ====================================
     // Save Researcher Information
@@ -95,6 +97,20 @@ bool SaveManager::SaveProgress(
     }
 
     // ====================================
+    // Save Researcher Tool Inventory (V7)
+    // Use quoted strings so names and descriptions can contain spaces.
+    // ====================================
+
+    const std::vector<Tool>& ownedTools = researcher.GetInventory().GetOwnedTools();
+    file << ownedTools.size() << '\n';
+    for (const Tool& tool : ownedTools)
+    {
+        file << std::quoted(tool.GetName()) << ' '
+            << std::quoted(tool.GetDescription()) << ' '
+            << tool.GetXPCost() << '\n';
+    }
+
+    // ====================================
     // Close File and Check for Errors
     // ====================================
 
@@ -151,7 +167,8 @@ bool SaveManager::LoadProgress(
             version != "BBT_SAVE_V3" &&
             version != "BBT_SAVE_V4" &&
             version != "BBT_SAVE_V5" &&
-            version != "BBT_SAVE_V6"))
+            version != "BBT_SAVE_V6" &&
+            version != "BBT_SAVE_V7"))
     {
         std::cout << "\nUnsupported save file format.\n";
         return false;
@@ -271,7 +288,8 @@ bool SaveManager::LoadProgress(
     if (version == "BBT_SAVE_V3" ||
         version == "BBT_SAVE_V4" ||
         version == "BBT_SAVE_V5" ||
-        version == "BBT_SAVE_V6")
+        version == "BBT_SAVE_V6" ||
+        version == "BBT_SAVE_V7")
     {
         if (!(file >> savedGuided >> savedAssessment) ||
             (savedGuided != 0 && savedGuided != 1) ||
@@ -290,7 +308,8 @@ bool SaveManager::LoadProgress(
 
     if (version == "BBT_SAVE_V4" ||
         version == "BBT_SAVE_V5" ||
-        version == "BBT_SAVE_V6")
+        version == "BBT_SAVE_V6" ||
+        version == "BBT_SAVE_V7")
     {
         if (!(file >> savedRewardClaimed) ||
             (savedRewardClaimed != 0 &&
@@ -317,7 +336,8 @@ bool SaveManager::LoadProgress(
     // ====================================
 
     if (version == "BBT_SAVE_V5" ||
-        version == "BBT_SAVE_V6")
+        version == "BBT_SAVE_V6" ||
+        version == "BBT_SAVE_V7")
     {
         if (!(file >> savedInjectionLesson
             >> savedInjectionAssessment
@@ -346,7 +366,8 @@ bool SaveManager::LoadProgress(
     const std::vector<SQLLesson>& academyLessons = sqlAcademy.GetLessons();
     std::vector<bool> savedAcademyCompletion(academyLessons.size(), false);
 
-    if (version == "BBT_SAVE_V6")
+    if (version == "BBT_SAVE_V6" ||
+        version == "BBT_SAVE_V7")
     {
         std::size_t academyCount = 0;
         if (!(file >> academyCount) || academyCount != academyLessons.size())
@@ -370,6 +391,44 @@ bool SaveManager::LoadProgress(
             savedAcademyCompletion[i] = (completed == 1);
         }
     }
+    // ====================================
+    // Read Researcher Tool Inventory (V7)
+    // Older saves have no inventory, so restore an empty one.
+    // Parse and validate before modifying live researcher state.
+    // ====================================
+
+    Inventory savedInventory;
+    if (version == "BBT_SAVE_V7")
+    {
+        std::size_t toolCount = 0;
+        if (!(file >> toolCount) || toolCount > 100)
+        {
+            std::cout << "\nInvalid tool inventory count.\n";
+            return false;
+        }
+
+        for (std::size_t i = 0; i < toolCount; ++i)
+        {
+            std::string name;
+            std::string description;
+            int xpCost = 0;
+
+            if (!(file >> std::quoted(name)
+                >> std::quoted(description)
+                >> xpCost) ||
+                name.empty() ||
+                description.empty() ||
+                name.size() > 200 ||
+                description.size() > 1000 ||
+                xpCost < 0 ||
+                !savedInventory.AddTool(Tool(name, description, xpCost)))
+            {
+                std::cout << "\nInvalid or duplicate tool inventory data.\n";
+                return false;
+            }
+        }
+    }
+
     // ====================================
 // Validate End of Save File
 // ====================================
@@ -458,6 +517,10 @@ bool SaveManager::LoadProgress(
         savedInjectionLesson == 1,
         savedInjectionAssessment == 1,
         savedInjectionReward == 1);
+
+    // Restore purchased tools without spending XP again.
+    // This replaces the in-memory inventory, including for older saves.
+    researcher.GetInventory() = std::move(savedInventory);
 
     // Restore academy completion without granting XP.
     for (std::size_t i = 0; i < academyLessons.size(); ++i)

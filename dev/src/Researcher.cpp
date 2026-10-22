@@ -136,3 +136,37 @@ bool Researcher::RestoreProgress(
 
     return true;
 }
+// Returns the researcher's inventory.
+Inventory& Researcher::GetInventory()
+{
+    return inventory;
+}
+
+// Provides read-only access to the inventory.
+const Inventory& Researcher::GetInventory() const
+{
+    return inventory;
+}
+bool Researcher::PurchaseTool(const Tool& tool)
+{
+    // Prevent duplicate purchases.
+    if (inventory.HasTool(tool.GetName()))
+    {
+        return false;
+    }
+
+    // Reject invalid prices.
+    if (tool.GetXPCost() < 0)
+    {
+        return false;
+    }
+
+    // Check available XP and deduct the cost.
+    if (!SpendXP(tool.GetXPCost()))
+    {
+        return false;
+    }
+
+    // Add the purchased tool to the inventory.
+    return inventory.AddTool(tool);
+}

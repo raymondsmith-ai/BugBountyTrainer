@@ -367,6 +367,108 @@ void TrainerApp::DisplayResearcherStatistics() const
 
 
 // ====================================
+// Display Researcher Tool Inventory
+// ====================================
+
+void TrainerApp::DisplayToolInventory() const
+{
+    std::cout << "\n====================================\n";
+    std::cout << "       RESEARCHER TOOL INVENTORY\n";
+    std::cout << "====================================\n";
+
+    const std::vector<Tool>& tools =
+        researcher.GetInventory().GetOwnedTools();
+
+    if (tools.empty())
+    {
+        std::cout << "Your inventory is empty.\n";
+        std::cout << "Visit the Tool Shop to purchase tools.\n";
+    }
+    else
+    {
+        for (const Tool& tool : tools)
+        {
+            std::cout << "\nTool: " << tool.GetName() << '\n';
+            std::cout << "Description: " << tool.GetDescription() << '\n';
+            std::cout << "XP Cost: " << tool.GetXPCost() << '\n';
+        }
+    }
+
+    std::cout << "\nTotal Tools Owned: " << tools.size() << '\n';
+    std::cout << "====================================\n";
+}
+
+// ====================================
+// Researcher Tool Shop
+// ====================================
+
+void TrainerApp::OpenToolShop()
+{
+    const std::vector<Tool> availableTools =
+    {
+        Tool("Nmap", "Network discovery and scanning.", 150),
+        Tool("Wireshark", "Network traffic analysis.", 200),
+        Tool("Burp Suite", "Web application security testing.", 250),
+        Tool("SQLmap", "SQL injection testing.", 300)
+    };
+
+    bool shopping = true;
+
+    while (shopping)
+    {
+        std::cout << "\n====================================\n";
+        std::cout << "             TOOL SHOP\n";
+        std::cout << "====================================\n";
+        std::cout << "Available XP: " << researcher.GetAvailableXP() << "\n\n";
+
+        for (std::size_t i = 0; i < availableTools.size(); ++i)
+        {
+            const Tool& tool = availableTools[i];
+            std::cout << (i + 1) << ". " << tool.GetName()
+                << " - " << tool.GetXPCost() << " XP";
+
+            if (researcher.GetInventory().HasTool(tool.GetName()))
+            {
+                std::cout << " [OWNED]";
+            }
+            std::cout << '\n';
+        }
+
+        std::cout << "0. Return to Main Menu\n";
+        std::cout << "====================================\n";
+        std::cout << "Select a tool: ";
+
+        const int choice = GetValidatedChoice(
+            0, static_cast<int>(availableTools.size()));
+
+        if (choice == 0)
+        {
+            shopping = false;
+        }
+        else
+        {
+            const Tool& selectedTool = availableTools[choice - 1];
+            if (researcher.GetInventory().HasTool(selectedTool.GetName()))
+            {
+                std::cout << "\nYou already own this tool.\n";
+            }
+            else if (researcher.PurchaseTool(selectedTool))
+            {
+                std::cout << "\nPurchase successful!\n";
+                std::cout << selectedTool.GetName()
+                    << " added to your inventory.\n";
+                std::cout << "Save progress to keep the purchase once inventory saving is implemented.\n";
+            }
+            else
+            {
+                std::cout << "\nNot enough available XP.\n";
+            }
+            Pause();
+        }
+    }
+}
+
+// ====================================
 // Main Menu
 // ====================================
 
@@ -403,9 +505,11 @@ void TrainerApp::DisplayMenu() const
     std::cout << "12. Docker SQL Injection Labs\n";
     std::cout << "13. SQL Academy (13 Modules)\n";
     std::cout << "14. View Researcher Statistics\n";
+    std::cout << "15. View Tool Inventory\n";
+    std::cout << "16. Tool Shop\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 14: ";
+    std::cout << "Enter a number from 1 to 16: ";
 }
 
 // ====================================
@@ -1234,17 +1338,13 @@ void TrainerApp::OpenDockerLabs()
 // Main Menu Choice Handling
 // ====================================
 
-        void TrainerApp::HandleChoice(int choice)
-        {
-            switch (choice)
-            {
-            case 1:
-                researcher.DisplayProfile();
-                break;
-
-            case 14:
-                DisplayResearcherStatistics();
-                break;
+void TrainerApp::HandleChoice(int choice)
+{
+    switch (choice)
+    {
+    case 1:
+        researcher.DisplayProfile();
+        break;
     case 2:
         OpenLearningPath();
         break;
@@ -1334,6 +1434,15 @@ void TrainerApp::OpenDockerLabs()
         }
         break;
     }
+    case 14:
+        DisplayResearcherStatistics();
+        break;
+    case 15:
+        DisplayToolInventory();
+        break;
+    case 16:
+        OpenToolShop();
+        break;
     case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
@@ -1557,6 +1666,7 @@ static bool HandlesOwnPause(int choice)
     case 6:  // Vulnerability Categories
     case 10: // SQL Fundamentals
     case 13: // SQL Academy
+    case 16: // Tool Shop (handles its own purchase prompts)
         return true;
 
     default:
@@ -1576,7 +1686,7 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 14);
+            int choice = GetValidatedChoice(1, 16);
             HandleChoice(choice);
 
             // Pause only when the selected screen

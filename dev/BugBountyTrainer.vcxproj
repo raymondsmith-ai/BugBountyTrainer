@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClInclude Include="include\Challenge.h" />
     <ClInclude Include="include\DockerLabClient.h" />
+    <ClInclude Include="include\Inventory.h" />
     <ClInclude Include="include\Lab.h" />
     <ClInclude Include="include\LearningPathManager.h" />
     <ClInclude Include="include\Researcher.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="include\SavedUserManager.h" />
     <ClInclude Include="include\SQLFundamentals.h" />
     <ClInclude Include="include\SQLInjection.h" />
+    <ClInclude Include="include\Tool.h" />
     <ClInclude Include="include\TrainerApp.h" />
     <ClInclude Include="include\SaveManager.h" />
     <ClInclude Include="include\SQLAcademy.h" />

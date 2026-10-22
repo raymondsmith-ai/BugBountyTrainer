@@ -17,10 +17,11 @@ bool SavedUserManager::HasSupportedSaveFormat(
 
     return std::getline(file, version) &&
         (version == "BBT_SAVE_V2" ||
-         version == "BBT_SAVE_V3" ||
-         version == "BBT_SAVE_V4" ||
-         version == "BBT_SAVE_V5" ||
-         version == "BBT_SAVE_V6");
+            version == "BBT_SAVE_V3" ||
+            version == "BBT_SAVE_V4" ||
+            version == "BBT_SAVE_V5" ||
+            version == "BBT_SAVE_V6" ||
+            version == "BBT_SAVE_V7");
 }
 
 // ====================================
@@ -121,10 +122,11 @@ std::string SavedUserManager::SavedUserLabel(
 
     if (std::getline(file, version) &&
         (version == "BBT_SAVE_V2" ||
-         version == "BBT_SAVE_V3" ||
-         version == "BBT_SAVE_V4" ||
-         version == "BBT_SAVE_V5" ||
-         version == "BBT_SAVE_V6") &&
+            version == "BBT_SAVE_V3" ||
+            version == "BBT_SAVE_V4" ||
+            version == "BBT_SAVE_V5" ||
+            version == "BBT_SAVE_V6" ||
+            version == "BBT_SAVE_V7") &&
         std::getline(file, name) &&
         !name.empty())
     {

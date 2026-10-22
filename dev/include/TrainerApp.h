@@ -11,15 +11,11 @@
 #include "SQLInjection.h"
 #include "SQLAcademy.h"
 
-// ====================================
-// BugBountyTrainer Application
-// ====================================
-
 class TrainerApp
 {
 private:
     // ====================================
-    // Researcher Profile
+    // Researcher
     // ====================================
 
     Researcher researcher;
@@ -36,13 +32,8 @@ private:
     // SQL Training Systems
     // ====================================
 
-    // Stage 1: SQL Fundamentals
     SQLFundamentals sqlFundamentals;
-
-    // Stage 2: SQL Injection Training
     SQLInjection sqlInjection;
-
-    // Complete 13-module SQL Academy
     SQLAcademy sqlAcademy;
 
     // ====================================
@@ -52,18 +43,15 @@ private:
     bool running;
 
     // ====================================
-    // Startup Menu
+    // Startup and Session Management
     // ====================================
 
     void DisplayStartupMenu() const;
     void OpenOptions();
+
     bool StartSession();
-
-    // ====================================
-    // Saved User Management
-    // ====================================
-
     bool SelectSavedUser();
+
     void DeleteSavedUser();
 
     // ====================================
@@ -72,10 +60,22 @@ private:
 
     void DisplayMenu() const;
     void HandleChoice(int choice);
+
+    // ====================================
+    // Researcher Statistics
+    // ====================================
+
     void DisplayResearcherStatistics() const;
 
     // ====================================
-    // Docker SQL Injection Labs
+    // Researcher Tool Inventory
+    // ====================================
+
+    void DisplayToolInventory() const;
+    void OpenToolShop();
+
+    // ====================================
+    // Docker Labs
     // ====================================
 
     void OpenDockerLabs();
@@ -92,6 +92,7 @@ private:
 
     void DisplayLabs() const;
     void OpenHandsOnLabs();
+
     void RunTerminalInvestigationLab(Lab& lab);
 
     // ====================================

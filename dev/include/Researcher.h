@@ -1,11 +1,17 @@
 #pragma once
 
 #include <string>
+#include "Inventory.h"
+
 
 class Researcher
 {
 private:
     std::string name;
+
+    // Tools owned by this researcher.
+    Inventory inventory;
+
 
     int level;
 
@@ -16,6 +22,9 @@ private:
     int availableXP;
 
 public:
+    // Access the researcher's inventory.
+    Inventory& GetInventory();
+    const Inventory& GetInventory() const;
   
     // Constructor.
     Researcher(const std::string& researcherName);
@@ -54,4 +63,6 @@ public:
         int savedLevel,
         int savedTotalXP,
         int savedAvailableXP);
+    // Purchases a tool using available XP.
+    bool PurchaseTool(const Tool& tool);
 };
