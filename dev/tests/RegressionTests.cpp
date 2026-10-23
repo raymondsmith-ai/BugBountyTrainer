@@ -150,6 +150,11 @@ namespace
     void TestSaveLoad()
     {
         TemporaryFiles files;
+
+        SQLFundamentals sqlFundamentals;
+        SQLInjection sqlInjection;
+        SQLAcademy sqlAcademy;
+
         Researcher original("Ray Smith");
         original.AddXP(450);
         original.SpendXP(50);
@@ -157,19 +162,48 @@ namespace
         challenges[0].CompleteChallenge();
         std::vector<LearningModule> modules{MakeModule(true), MakeModule(false)};
         modules[0].CompleteModule();
+
         const std::string filename = (files.directory / "roundtrip.txt").string();
-        Check(SaveManager::SaveProgress(original, challenges, modules, filename), "Save succeeds");
+        Check(SaveManager::SaveProgress(
+            original, challenges, modules,
+            sqlFundamentals, sqlInjection, sqlAcademy, filename),
+            "Save succeeds");
 
         Researcher loaded("Before load");
+        SQLFundamentals loadedSQLFundamentals;
+        SQLInjection loadedSQLInjection;
+        SQLAcademy loadedSQLAcademy;
         std::vector<Challenge> loadedChallenges{MakeChallenge()};
         std::vector<LearningModule> loadedModules{MakeModule(), MakeModule(true)};
-        Check(SaveManager::LoadProgress(loaded, loadedChallenges, loadedModules, filename), "Load succeeds");
+
+        Check(SaveManager::LoadProgress(
+            loaded, loadedChallenges, loadedModules,
+            loadedSQLFundamentals, loadedSQLInjection, loadedSQLAcademy, filename),
+            "Load succeeds");
         Check(loaded.GetName() == "Ray Smith" && loaded.GetLevel() == 3 &&
-            loaded.GetTotalXP() == 450 && loaded.GetAvailableXP() == 400, "Name and spent XP round-trip");
+            loaded.GetTotalXP() == 450 && loaded.GetAvailableXP() == 400,
+            "Name and spent XP round-trip");
         Check(loadedChallenges[0].IsCompleted() && loadedModules[0].IsCompleted() &&
-            loadedModules[0].IsUnlocked() && !loadedModules[1].IsUnlocked(), "Challenge and module states round-trip");
-        Check(SaveManager::LoadProgress(loaded, loadedChallenges, loadedModules, filename) &&
-            loaded.GetTotalXP() == 450 && loaded.GetAvailableXP() == 400, "Repeated loading does not award XP");
+            loadedModules[0].IsUnlocked() && !loadedModules[1].IsUnlocked(),
+            "Challenge and module states round-trip");
+
+        Check(SaveManager::LoadProgress(
+            loaded, loadedChallenges, loadedModules,
+            loadedSQLFundamentals, loadedSQLInjection, loadedSQLAcademy, filename) &&
+            loaded.GetTotalXP() == 450 && loaded.GetAvailableXP() == 400,
+            "Repeated loading does not award XP");
+
+        Check(loadedSQLAcademy.GetLessons().size() == sqlAcademy.GetLessons().size(),
+            "SQL Academy lesson count round-trips");
+        bool academyInitiallyIncomplete = true;
+        for (const SQLLesson& lesson : loadedSQLAcademy.GetLessons())
+        {
+            if (lesson.completed)
+            {
+                academyInitiallyIncomplete = false;
+            }
+        }
+        Check(academyInitiallyIncomplete, "Incomplete SQL Academy progress round-trips");
 
         const std::vector<std::string> invalidSaves{
             "BBT_SAVE_V1\nOther\n",
@@ -183,7 +217,9 @@ namespace
         for (std::size_t i = 0; i < invalidSaves.size(); ++i)
         {
             std::ofstream(invalid) << invalidSaves[i];
-            Check(!SaveManager::LoadProgress(loaded, loadedChallenges, loadedModules, invalid),
+            Check(!SaveManager::LoadProgress(
+                loaded, loadedChallenges, loadedModules,
+                loadedSQLFundamentals, loadedSQLInjection, loadedSQLAcademy, invalid),
                 "Malformed save rejected, case " + std::to_string(i + 1));
             Check(loaded.GetName() == "Ray Smith" && loaded.GetTotalXP() == 450 &&
                 loaded.GetAvailableXP() == 400 && loadedChallenges[0].IsCompleted() &&

@@ -16,6 +16,8 @@ $sourceFiles = @(
     (Join-Path $projectRoot 'dev/src/Lab.cpp')
     (Join-Path $projectRoot 'dev/src/LearningModule.cpp')
     (Join-Path $projectRoot 'dev/src/SaveManager.cpp')
+    (Join-Path $projectRoot 'dev/src/SQLInjection.cpp')
+    (Join-Path $projectRoot 'dev/src/SQLAcademy.cpp')
 )
 
 Push-Location $testBuild

@@ -8,59 +8,123 @@
 #include "LearningModule.h"
 #include "Lab.h"
 #include "SQLFundamentals.h"
+#include "SQLInjection.h"
+#include "SQLAcademy.h"
 
 class TrainerApp
 {
 private:
+    // ====================================
+    // Researcher
+    // ====================================
+
     Researcher researcher;
+
+    // ====================================
+    // Training Data
+    // ====================================
 
     std::vector<Challenge> challenges;
     std::vector<LearningModule> learningModules;
     std::vector<Lab> labs;
 
+    // ====================================
+    // SQL Training Systems
+    // ====================================
+
     SQLFundamentals sqlFundamentals;
+    SQLInjection sqlInjection;
+    SQLAcademy sqlAcademy;
+
+    // ====================================
+    // Application State
+    // ====================================
 
     bool running;
 
-    // Startup menu.
+    // ====================================
+    // Startup and Session Management
+    // ====================================
+
     void DisplayStartupMenu() const;
     void OpenOptions();
-    bool StartSession();
 
-    // Saved-user management.
+    bool StartSession();
     bool SelectSavedUser();
+
     void DeleteSavedUser();
 
-    // Main menu.
+    // ====================================
+    // Main Menu
+    // ====================================
+
     void DisplayMenu() const;
     void HandleChoice(int choice);
 
-    // Learning path.
-    void DisplayLearningPath() const;
+    // ====================================
+    // Researcher Statistics
+    // ====================================
+
+    void DisplayResearcherStatistics() const;
+
+    // ====================================
+    // Researcher Tool Inventory
+    // ====================================
+
+    void DisplayToolInventory() const;
+    void OpenToolShop();
+
+    // ====================================
+    // Docker Labs
+    // ====================================
+
+    void OpenDockerLabs();
+
+    // ====================================
+    // Learning Path
+    // ====================================
+
     void OpenLearningPath();
 
-    // Hands-on labs.
+    // ====================================
+    // Hands-On Labs
+    // ====================================
+
     void DisplayLabs() const;
     void OpenHandsOnLabs();
+
     void RunTerminalInvestigationLab(Lab& lab);
 
-    // Training challenges.
+    // ====================================
+    // Training Challenges
+    // ====================================
+
     void DisplayChallenges() const;
     void StartTraining();
 
-    // Vulnerability categories.
+    // ====================================
+    // Vulnerability Categories
+    // ====================================
+
     std::vector<std::string> GetCategories() const;
+
     void DisplayCategories() const;
     void BrowseCategories();
 
     void DisplayChallengesByCategory(
         const std::string& selectedCategory) const;
 
-    // Save and load current researcher progress.
+    // ====================================
+    // Save and Load Progress
+    // ====================================
+
     void SaveProgress();
     void LoadProgress();
 
-    // Input and utility functions.
+    // ====================================
+    // Input Validation and Utilities
+    // ====================================
+
     int GetValidatedChoice(
         int minimum,
         int maximum) const;
@@ -68,7 +132,16 @@ private:
     void Pause() const;
 
 public:
-    explicit TrainerApp(const std::string& researcherName);
+    // ====================================
+    // Constructor
+    // ====================================
+
+    explicit TrainerApp(
+        const std::string& researcherName);
+
+    // ====================================
+    // Application Main Loop
+    // ====================================
 
     void Run();
 };

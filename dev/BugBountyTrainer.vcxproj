@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -139,22 +139,36 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\labs\sql-injection-cpp\LessonManager.cpp" />
+    <ClCompile Include="src\LearningPathManager.cpp" />
+    <ClCompile Include="src\SavedUserManager.cpp" />
+    <ClCompile Include="src\SQLAcademy.cpp" />
+    <ClCompile Include="src\DockerLabClient.cpp" />
     <ClCompile Include="src\SaveManager.cpp" />
     <ClCompile Include="src\BugBountyTrainer.cpp" />
     <ClCompile Include="src\Challenge.cpp" />
     <ClCompile Include="src\Lab.cpp" />
     <ClCompile Include="src\LearningModule.cpp" />
     <ClCompile Include="src\Researcher.cpp" />
+    <ClCompile Include="src\SQLInjection.cpp" />
     <ClCompile Include="src\TrainerApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Challenge.h" />
+    <ClInclude Include="include\DockerLabClient.h" />
+    <ClInclude Include="include\Inventory.h" />
     <ClInclude Include="include\Lab.h" />
+    <ClInclude Include="include\LearningPathManager.h" />
     <ClInclude Include="include\Researcher.h" />
     <ClInclude Include="include\LearningModule.h" />
+    <ClInclude Include="include\SavedUserManager.h" />
     <ClInclude Include="include\SQLFundamentals.h" />
+    <ClInclude Include="include\SQLInjection.h" />
+    <ClInclude Include="include\Tool.h" />
     <ClInclude Include="include\TrainerApp.h" />
     <ClInclude Include="include\SaveManager.h" />
+    <ClInclude Include="include\SQLAcademy.h" />
+    <ClInclude Include="include\SQLLesson.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

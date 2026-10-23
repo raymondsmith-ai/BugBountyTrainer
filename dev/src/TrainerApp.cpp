@@ -1,5 +1,7 @@
 #include "../include/TrainerApp.h"
 #include "../include/SaveManager.h"
+#include "../include/SavedUserManager.h"
+#include "../include/LearningPathManager.h"
 
 #include <iostream>
 #include <string>
@@ -12,78 +14,17 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include "../include/DockerLabClient.h"
+
+
+
+
+
 // Shared assessment helpers. The last correct-answer position is remembered
 // for each question during this application session, including retakes.
 namespace
 {
-    bool HasSupportedSaveFormat(const std::filesystem::path& path)
-    {
-        std::ifstream file(path);
-        std::string version;
-        return std::getline(file, version) &&
-            (version == "BBT_SAVE_V2" ||
-                version == "BBT_SAVE_V3" ||
-                version == "BBT_SAVE_V4");
-    }
 
-    std::vector<std::filesystem::path> FindSaveFiles(bool supportedOnly)
-    {
-        const std::string prefix = "researcher_save_";
-        const std::string suffix = ".txt";
-        std::vector<std::filesystem::path> saveFiles;
-        std::error_code error;
-        std::filesystem::directory_iterator entry(".", error);
-        const std::filesystem::directory_iterator end;
-
-        while (!error && entry != end)
-        {
-            const std::filesystem::path path = entry->path();
-            if (entry->is_regular_file(error) && !entry->is_symlink(error))
-            {
-                const std::string filename = path.filename().string();
-                const bool isLegacySave = filename == "researcher_save.txt";
-                const bool isUserSave =
-                    filename.rfind(prefix, 0) == 0 &&
-                    filename.size() > prefix.size() + suffix.size() &&
-                    filename.compare(filename.size() - suffix.size(),
-                        suffix.size(), suffix) == 0;
-
-                if ((isLegacySave || isUserSave) &&
-                    (!supportedOnly || HasSupportedSaveFormat(path)))
-                {
-                    saveFiles.push_back(path);
-                }
-            }
-            if (!error)
-            {
-                entry.increment(error);
-            }
-        }
-
-        if (error)
-        {
-            throw std::runtime_error("Unable to read the saved-user folder.");
-        }
-
-        std::sort(saveFiles.begin(), saveFiles.end());
-        return saveFiles;
-    }
-
-    std::string SavedUserLabel(const std::filesystem::path& path)
-    {
-        std::ifstream file(path);
-        std::string version;
-        std::string name;
-        if (std::getline(file, version) &&
-            (version == "BBT_SAVE_V2" ||
-                version == "BBT_SAVE_V3" ||
-                version == "BBT_SAVE_V4") &&
-            std::getline(file, name) && !name.empty())
-        {
-            return name;
-        }
-        return path.filename().string() + " [unsupported or unreadable]";
-    }
 
     std::string GenerateValidationCode()
     {
@@ -105,31 +46,6 @@ namespace
         return code;
     }
 
-    std::string SaveFilenameFor(const std::string& name)
-    {
-        std::string safeName;
-        for (unsigned char ch : name)
-        {
-            if (std::isalnum(ch) || ch == '-' || ch == '_')
-            {
-                safeName += static_cast<char>(ch);
-            }
-            else if (safeName.empty() || safeName.back() != '_')
-            {
-                safeName += '_';
-            }
-        }
-
-        while (!safeName.empty() && safeName.back() == '_')
-        {
-            safeName.pop_back();
-        }
-        if (safeName.empty())
-        {
-            safeName = "Researcher";
-        }
-        return "researcher_save_" + safeName + ".txt";
-    }
 
     std::mt19937& AssessmentRng()
     {
@@ -192,266 +108,6 @@ namespace
         }
     }
 
-    struct LessonQuestion
-    {
-        std::string prompt;
-        std::array<std::string, 3> options;
-        int correctIndex;
-    };
-
-    struct ModuleLesson
-    {
-        int moduleIndex;
-        std::string title;
-        std::string lesson;
-        std::string scenario;
-        std::vector<LessonQuestion> questions;
-    };
-
-    const ModuleLesson* FindModuleLesson(int moduleIndex)
-    {
-        // Every assessment uses the same runner; content belongs in this table.
-        static const std::vector<ModuleLesson> lessons =
-        {
-            {
-                3,
-                "Networking Fundamentals",
-                R"(A hostname is a readable name; an IP address identifies a network endpoint.
-DNS can resolve a hostname to an IP address.
-A port identifies a service endpoint on a host. An IP address and port are
-different pieces of information.
-TCP provides a reliable, ordered byte stream. UDP carries datagrams without
-guaranteeing delivery or order.
-Common defaults: HTTPS uses TCP port 443; SSH uses TCP port 22; DNS commonly
-uses port 53 over UDP or TCP. A port number alone does not prove service identity.
-Before interacting with a service, confirm both the target and activity are
-authorized. An observed service is not automatically an authorized target.
-)",
-                R"(SIMULATED SERVICE REPORT
-Hostname: portal.training.test
-Address: 192.0.2.10
-Services: 22/tcp SSH, 443/tcp HTTPS, 53/udp DNS
-Lab scope: portal.training.test, HTTPS on port 443 only.
-
-Activity: identify the hostname, address, permitted service, and transport.
-Use this report to answer the questions. No network requests are made.
-)",
-                {
-                    {"Which service translates a hostname to an IP address?",
-                        {"SSH", "DNS", "HTTPS"}, 1},
-                    {"Which service is explicitly permitted by this lab's scope?",
-                        {"SSH on port 22", "All discovered services", "HTTPS on port 443"}, 2},
-                    {"Which transport provides a reliable, ordered byte stream?",
-                        {"TCP", "UDP", "DNS"}, 0},
-                    {"What does port 443 identify in this report?",
-                        {"The researcher's identity", "The host's physical location", "The HTTPS service endpoint"}, 2},
-                    {"What should you assume about delivery of a UDP datagram?",
-                        {"Delivery and ordering are not guaranteed", "It always arrives before TCP", "It is encrypted automatically"}, 0}
-                }
-            },
-            {
-                4,
-                "Web Fundamentals",
-                R"(HTTP follows a request/response model. A request includes a method, a path,
-headers, and sometimes a body. The response includes a status code and content.
-GET requests retrieve a representation; POST requests submit data for processing.
-Cookies let browsers send stored values back to a server. A session cookie may
-identify a signed-in session and should be treated as sensitive.
-A 200 response indicates success. A 401 response means valid authentication
-credentials are missing or unacceptable. A 403 response means access is refused.
-HTTPS protects data in transit; the server must still check permissions.
-Changing an identifier in a URL must never replace server-side authorization.
-)",
-                R"(SIMULATED WEB EXCHANGE
-Request:
-GET /account HTTP/1.1
-Host: portal.training.test
-Cookie: session=demo-session-value
-
-Response:
-HTTP/1.1 200 OK
-Content-Type: text/html
-
-The demonstration session value is fictional.
-Activity: identify the method, path, state-carrying header, and response meaning.
-)",
-                {
-                    {"Which HTTP method appears in the request?",
-                        {"POST", "GET", "DELETE"}, 1},
-                    {"Which path is being requested?",
-                        {"/account", "portal.training.test", "text/html"}, 0},
-                    {"Which header carries the demonstration session value?",
-                        {"Content-Type", "Host", "Cookie"}, 2},
-                    {"What does HTTP 401 indicate?",
-                        {"The page moved permanently", "Valid authentication credentials are required", "The request definitely succeeded"}, 1},
-                    {"Does HTTPS remove the need for server-side permission checks?",
-                        {"Yes, encryption proves ownership", "Yes, cookies grant access to every account", "No, authorization must still be enforced"}, 2}
-                }
-            },
-            {
-                5,
-                "Reconnaissance",
-                R"(Reconnaissance collects and organizes information before validation.
-Passive research uses existing information, such as published documentation.
-Active reconnaissance interacts with a target and requires permission for that
-target and activity. Public visibility does not itself grant testing permission.
-Record the source, observation, and time. Separate confirmed facts from guesses.
-An asset inventory can include hostnames, services, owners, and scope status.
-A third-party host linked from an authorized site is not automatically in scope.
-Work from explicit scope, and request clarification when ownership is uncertain.
-)",
-                R"(SIMULATED ASSET INVENTORY
-portal.training.test | HTTPS | Listed in scope
-api.training.test    | HTTPS | Listed in scope
-cdn.vendor.test      | HTTPS | Third-party service, not listed in scope
-
-Evidence: API documentation lists /v1/profile as an endpoint.
-No request to /v1/profile has been made.
-
-Activity: distinguish permitted assets, documented observations, and assumptions.
-)",
-                {
-                    {"Which asset should be excluded unless separately authorized?",
-                        {"api.training.test", "cdn.vendor.test", "portal.training.test"}, 1},
-                    {"Which example is passive research?",
-                        {"Reading already-published API documentation", "Sending test payloads", "Running a service scan"}, 0},
-                    {"What can you conclude from the documented /v1/profile endpoint?",
-                        {"It is vulnerable", "It exposes every user's profile", "It is documented; its behavior is not yet verified"}, 2},
-                    {"What makes a reconnaissance note useful?",
-                        {"A guess with no source", "A source, observation, and recorded time", "Only the number of URLs collected"}, 1},
-                    {"Before actively testing a newly discovered hostname, what comes first?",
-                        {"Confirm explicit scope and permitted activities", "Assume related names are authorized", "Test it before writing it down"}, 0}
-                }
-            },
-            {
-                6,
-                "Web Vulnerability Fundamentals",
-                R"(Authentication establishes who a user is. Authorization determines what that
-user may access. Both must be enforced on the server.
-An insecure direct object reference can occur when a server accepts a record
-identifier without checking whether the requesting user may access that record.
-For SQL queries, parameterized statements separate values from query structure.
-Input validation is useful, but does not replace parameterized queries.
-Cross-site scripting prevention includes context-appropriate output encoding;
-treat untrusted text as data rather than executable browser content.
-Validate suspected issues using authorized test accounts and minimal evidence.
-A suspicious response alone is not proof of a vulnerability.
-)",
-                R"(SIMULATED OWNERSHIP CHECK
-Test account A owns record 101.
-Test account B owns record 202.
-Both accounts are provided by this training lab.
-
-The server receives an authenticated request for a record identifier.
-Activity: choose the expected permission check and appropriate prevention.
-These questions describe a simulation; do not access real users' records.
-)",
-                {
-                    {"Before returning record 202 to account A, what must the server check?",
-                        {"Only that A is signed in", "That the URL contains a number", "That A is authorized to access record 202"}, 2},
-                    {"What is the main purpose of authentication?",
-                        {"Establish the user's identity", "Grant access to every record", "Remove the need for authorization"}, 0},
-                    {"Which approach separates SQL values from query structure?",
-                        {"Concatenating user input", "Parameterized statements", "Hiding the database error message"}, 1},
-                    {"Which helps prevent untrusted text becoming executable browser content?",
-                        {"A longer page title", "Context-appropriate output encoding", "Only changing the URL"}, 1},
-                    {"How should an ownership-check finding be validated in this lab?",
-                        {"Use unrelated real accounts", "Download as much data as possible", "Use the provided accounts and minimal evidence"}, 2}
-                }
-            },
-            {
-                7,
-                "Bug Bounty Methodology",
-                R"(A repeatable workflow starts with scope and rules, then reconnaissance,
-a testable hypothesis, minimal authorized validation, and reporting.
-Keep notes of actions and observations so someone else can reproduce the result.
-Separate expected behavior, actual behavior, and supported security impact.
-A useful report includes the affected component, prerequisites, numbered steps,
-expected and actual results, minimal evidence, impact, and a suggested remedy.
-Redact session tokens, passwords, and unrelated personal data from evidence.
-Avoid duplicate or unverified reports; a tool alert is a lead, not a confirmed bug.
-When a test risks exceeding scope or causing harm, stop and seek clarification.
-)",
-                R"(SIMULATED REPORT DRAFT
-Title: Account A can read account B's lab record
-Prerequisite: Two instructor-provided test accounts
-Observation: An authorized lab test returned B's record to A
-Missing details: exact steps, expected behavior, minimal evidence, and impact
-
-Activity: improve reproducibility and support the report's claims.
-Keep all reproduction steps limited to the fictional training environment.
-)",
-                {
-                    {"What should happen before reconnaissance and validation?",
-                        {"Confirm scope and program rules", "Publish a report", "Choose a reward amount"}, 0},
-                    {"Which addition most improves reproducibility?",
-                        {"More dramatic wording", "Prerequisites and numbered steps with expected and actual results", "A claim that every account is affected"}, 1},
-                    {"How should session tokens appear in shared report evidence?",
-                        {"Always publish their full values", "Use them as the report title", "Redact them unless a secure agreed process requires them"}, 2},
-                    {"What does an automated scanner alert establish by itself?",
-                        {"A confirmed high-impact vulnerability", "A lead requiring authorized validation", "Permission to test related systems"}, 1},
-                    {"Which impact statement is strongest?",
-                        {"Every system is compromised", "The reward should be large", "The provided account could read another test account's record"}, 2}
-                }
-            }
-        };
-
-        for (const ModuleLesson& lesson : lessons)
-        {
-            if (lesson.moduleIndex == moduleIndex)
-            {
-                return &lesson;
-            }
-        }
-        return nullptr;
-    }
-
-    bool RunModuleLesson(const ModuleLesson& lesson)
-    {
-        std::cout << "\n====================================\n";
-        std::cout << lesson.title << '\n';
-        std::cout << "====================================\n\n";
-        std::cout << lesson.lesson << "\n" << lesson.scenario;
-        std::cout << "\nKNOWLEDGE ASSESSMENT\n";
-        std::cout << "Answer all " << lesson.questions.size()
-            << " questions correctly to complete this module.\n";
-
-        int correctAnswers = 0;
-        for (int i = 0; i < static_cast<int>(lesson.questions.size()); ++i)
-        {
-            const LessonQuestion& question = lesson.questions[i];
-            const std::vector<int> order = ShuffleAnswerPositions(
-                lesson.title + " Q" + std::to_string(i),
-                static_cast<int>(question.options.size()),
-                question.correctIndex);
-
-            std::cout << "\n" << i + 1 << ". " << question.prompt << "\n\n";
-            for (int option = 0; option < static_cast<int>(order.size()); ++option)
-            {
-                std::cout << "   " << static_cast<char>('a' + option) << ". "
-                    << question.options[order[option]] << '\n';
-            }
-            std::cout << '\n';
-
-            const int selectedPosition =
-                ReadLetterAnswer(static_cast<int>(order.size()));
-            if (order[selectedPosition] == question.correctIndex)
-            {
-                ++correctAnswers;
-            }
-        }
-
-        std::cout << "\nAssessment Score: " << correctAnswers
-            << "/" << lesson.questions.size() << '\n';
-        const bool passed =
-            correctAnswers == static_cast<int>(lesson.questions.size());
-        if (!passed)
-        {
-            std::cout << "Assessment not passed. No XP awarded.\n";
-            std::cout << "Review the lesson and reopen this module to try again.\n";
-        }
-        return passed;
-    }
 
 }
 
@@ -659,6 +315,158 @@ TrainerApp::TrainerApp(const std::string& researcherName)
 
     labs.push_back(networkLab);
 }
+// ====================================
+// Researcher Statistics
+// ====================================
+
+void TrainerApp::DisplayResearcherStatistics() const
+{
+    int completedChallenges = 0;
+
+    for (const Challenge& challenge : challenges)
+    {
+        if (challenge.IsCompleted())
+        {
+            completedChallenges++;
+        }
+    }
+
+    const int totalChallenges =
+        static_cast<int>(challenges.size());
+
+    const int remainingChallenges =
+        totalChallenges - completedChallenges;
+
+    std::cout << "\n====================================\n";
+    std::cout << "       RESEARCHER STATISTICS\n";
+    std::cout << "====================================\n";
+
+    std::cout << "Researcher:          "
+        << researcher.GetName() << '\n';
+
+    std::cout << "Level:               "
+        << researcher.GetLevel() << '\n';
+
+    std::cout << "Total XP:            "
+        << researcher.GetTotalXP() << '\n';
+
+    std::cout << "Available XP:        "
+        << researcher.GetAvailableXP() << '\n';
+
+    std::cout << "Total Challenges:    "
+        << totalChallenges << '\n';
+
+    std::cout << "Completed Challenges: "
+        << completedChallenges << '\n';
+
+    std::cout << "Remaining Challenges: "
+        << remainingChallenges << '\n';
+
+    std::cout << "====================================\n";
+}
+
+
+// ====================================
+// Display Researcher Tool Inventory
+// ====================================
+
+void TrainerApp::DisplayToolInventory() const
+{
+    std::cout << "\n====================================\n";
+    std::cout << "       RESEARCHER TOOL INVENTORY\n";
+    std::cout << "====================================\n";
+
+    const std::vector<Tool>& tools =
+        researcher.GetInventory().GetOwnedTools();
+
+    if (tools.empty())
+    {
+        std::cout << "Your inventory is empty.\n";
+        std::cout << "Visit the Tool Shop to purchase tools.\n";
+    }
+    else
+    {
+        for (const Tool& tool : tools)
+        {
+            std::cout << "\nTool: " << tool.GetName() << '\n';
+            std::cout << "Description: " << tool.GetDescription() << '\n';
+            std::cout << "XP Cost: " << tool.GetXPCost() << '\n';
+        }
+    }
+
+    std::cout << "\nTotal Tools Owned: " << tools.size() << '\n';
+    std::cout << "====================================\n";
+}
+
+// ====================================
+// Researcher Tool Shop
+// ====================================
+
+void TrainerApp::OpenToolShop()
+{
+    const std::vector<Tool> availableTools =
+    {
+        Tool("Nmap", "Network discovery and scanning.", 150),
+        Tool("Wireshark", "Network traffic analysis.", 200),
+        Tool("Burp Suite", "Web application security testing.", 250),
+        Tool("SQLmap", "SQL injection testing.", 300)
+    };
+
+    bool shopping = true;
+
+    while (shopping)
+    {
+        std::cout << "\n====================================\n";
+        std::cout << "             TOOL SHOP\n";
+        std::cout << "====================================\n";
+        std::cout << "Available XP: " << researcher.GetAvailableXP() << "\n\n";
+
+        for (std::size_t i = 0; i < availableTools.size(); ++i)
+        {
+            const Tool& tool = availableTools[i];
+            std::cout << (i + 1) << ". " << tool.GetName()
+                << " - " << tool.GetXPCost() << " XP";
+
+            if (researcher.GetInventory().HasTool(tool.GetName()))
+            {
+                std::cout << " [OWNED]";
+            }
+            std::cout << '\n';
+        }
+
+        std::cout << "0. Return to Main Menu\n";
+        std::cout << "====================================\n";
+        std::cout << "Select a tool: ";
+
+        const int choice = GetValidatedChoice(
+            0, static_cast<int>(availableTools.size()));
+
+        if (choice == 0)
+        {
+            shopping = false;
+        }
+        else
+        {
+            const Tool& selectedTool = availableTools[choice - 1];
+            if (researcher.GetInventory().HasTool(selectedTool.GetName()))
+            {
+                std::cout << "\nYou already own this tool.\n";
+            }
+            else if (researcher.PurchaseTool(selectedTool))
+            {
+                std::cout << "\nPurchase successful!\n";
+                std::cout << selectedTool.GetName()
+                    << " added to your inventory.\n";
+                std::cout << "Save progress to keep the purchase once inventory saving is implemented.\n";
+            }
+            else
+            {
+                std::cout << "\nNot enough available XP.\n";
+            }
+            Pause();
+        }
+    }
+}
 
 // ====================================
 // Main Menu
@@ -693,9 +501,15 @@ void TrainerApp::DisplayMenu() const
     std::cout << "8. Load Progress\n";
     std::cout << "9. Exit\n";
     std::cout << "10. SQL Fundamentals (Stage 1)\n";
+    std::cout << "11. SQL Injection Training (Stage 2)\n";
+    std::cout << "12. Docker SQL Injection Labs\n";
+    std::cout << "13. SQL Academy (13 Modules)\n";
+    std::cout << "14. View Researcher Statistics\n";
+    std::cout << "15. View Tool Inventory\n";
+    std::cout << "16. Tool Shop\n";
 
     std::cout << "====================================\n";
-    std::cout << "Enter a number from 1 to 10: ";
+    std::cout << "Enter a number from 1 to 16: ";
 }
 
 // ====================================
@@ -749,435 +563,21 @@ int TrainerApp::GetValidatedChoice(int minimum, int maximum) const
 // Display Learning Path
 // ====================================
 
-void TrainerApp::DisplayLearningPath() const
-{
-    std::cout << "\n====================================\n";
-    std::cout << "           LEARNING PATH\n";
-    std::cout << "====================================\n";
-
-    std::cout << "Researcher Level: "
-        << researcher.GetLevel() << std::endl;
-
-    std::cout << "Total XP: "
-        << researcher.GetTotalXP() << std::endl;
-
-    std::cout << "Available XP: "
-        << researcher.GetAvailableXP() << std::endl;
-
-    std::cout << "====================================\n\n";
-
-    for (int i = 0;
-        i < static_cast<int>(learningModules.size());
-        i++)
-    {
-        std::cout << i + 1 << ". ";
-
-        if (learningModules[i].IsCompleted())
-        {
-            std::cout << "[COMPLETED] ";
-        }
-        else if (learningModules[i].IsUnlocked())
-        {
-            std::cout << "[AVAILABLE] ";
-        }
-        else
-        {
-            std::cout << "[LOCKED] ";
-        }
-
-        std::cout << "Level "
-            << learningModules[i].GetModuleLevel()
-            << " - "
-            << learningModules[i].GetTitle()
-            << std::endl;
-
-        std::cout << "   Difficulty: "
-            << learningModules[i].GetDifficulty()
-            << std::endl;
-
-        std::cout << "   XP Reward: "
-            << learningModules[i].GetXPReward()
-            << " XP\n";
-
-        std::cout << "   Unlock Cost: "
-            << learningModules[i].GetUnlockCost()
-            << " XP\n";
-
-        std::cout << "   Required Level: "
-            << learningModules[i].GetRequiredLevel()
-            << std::endl;
-
-        std::cout << std::endl;
-    }
-
-    std::cout << "0. Return to Main Menu\n";
-    std::cout << "====================================\n";
-}
-
-// ====================================
-// Open Learning Path
-// ====================================
-
 void TrainerApp::OpenLearningPath()
 {
-    bool viewingLearningPath = true;
-
-    while (viewingLearningPath)
-    {
-        DisplayLearningPath();
-
-        std::cout << "Select a module: ";
-
-        int choice = GetValidatedChoice(
-            0,
-            static_cast<int>(learningModules.size()));
-
-        if (choice == 0)
+    LearningPathManager::Run(
+        researcher, learningModules, challenges, labs,
+        [this](int minimum, int maximum)
         {
-            viewingLearningPath = false;
-            continue;
-        }
-
-        int moduleIndex = choice - 1;
-
-        LearningModule* selectedModule =
-            &learningModules[moduleIndex];
-
-        // ====================================
-        // Locked Module
-        // ====================================
-
-        if (!selectedModule->IsUnlocked())
+            return GetValidatedChoice(minimum, maximum);
+        },
+        [this]()
         {
-            std::cout << "\n====================================\n";
-            std::cout << "           MODULE LOCKED\n";
-            std::cout << "====================================\n";
-
-            std::cout << "Module: "
-                << selectedModule->GetTitle()
-                << std::endl;
-
-            std::cout << "Required Level: "
-                << selectedModule->GetRequiredLevel()
-                << std::endl;
-
-            std::cout << "Unlock Cost: "
-                << selectedModule->GetUnlockCost()
-                << " XP\n";
-
-            std::cout << "Available XP: "
-                << researcher.GetAvailableXP()
-                << std::endl;
-
-            // Check whether the previous module
-            // has been completed.
-            if (moduleIndex > 0)
-            {
-                LearningModule* previousModule =
-                    &learningModules[moduleIndex - 1];
-
-                if (!previousModule->IsCompleted())
-                {
-                    std::cout << "\n====================================\n";
-                    std::cout << "      PREREQUISITE NOT MET\n";
-                    std::cout << "====================================\n";
-
-                    std::cout << "You must complete:\n";
-
-                    std::cout << "Level "
-                        << previousModule->GetModuleLevel()
-                        << " - "
-                        << previousModule->GetTitle()
-                        << std::endl;
-
-                    Pause();
-                    continue;
-                }
-            }
-
-            // Check researcher level.
-            if (researcher.GetLevel() <
-                selectedModule->GetRequiredLevel())
-            {
-                std::cout << "\nYour researcher level is too low.\n";
-
-                std::cout << "Required Level: "
-                    << selectedModule->GetRequiredLevel()
-                    << std::endl;
-
-                Pause();
-                continue;
-            }
-
-            // Check available XP.
-            if (researcher.GetAvailableXP() <
-                selectedModule->GetUnlockCost())
-            {
-                std::cout << "\nNot enough available XP.\n";
-
-                Pause();
-                continue;
-            }
-
-            // Allow the researcher to purchase the module.
-            std::cout << "\nPrerequisites completed.\n\n";
-            std::cout << "1. Purchase Module\n";
-            std::cout << "2. Cancel\n";
-            std::cout << "Choice: ";
-
-            int purchaseChoice = GetValidatedChoice(1, 2);
-
-            if (purchaseChoice == 2)
-            {
-                continue;
-            }
-
-            if (researcher.SpendXP(
-                selectedModule->GetUnlockCost()))
-            {
-                selectedModule->UnlockModule();
-                // ====================================
-// Check for Previously Completed Lab
-// ====================================
-
-// Computer Fundamentals requires the
-// Terminal Investigation hands-on lab.
-//
-// If the lab was completed before the
-// module was unlocked, complete the
-// module now.
-                if (moduleIndex == 1 &&
-                    labs[0].IsCompleted() &&
-                    !selectedModule->IsCompleted())
-                {
-                    selectedModule->CompleteModule();
-
-                    if (selectedModule->IsCompleted())
-                    {
-                        researcher.AddXP(
-                            selectedModule->GetXPReward());
-
-                        std::cout << "\n====================================\n";
-                        std::cout << "       LEARNING MODULE COMPLETE!\n";
-                        std::cout << "====================================\n";
-
-                        std::cout
-                            << selectedModule->GetTitle()
-                            << " completed successfully!\n";
-
-                        std::cout << "\nModule XP Bonus: "
-                            << selectedModule->GetXPReward()
-                            << " XP\n";
-
-                        std::cout
-                            << "\nYour previously completed "
-                            << "Terminal Investigation lab "
-                            << "satisfied the module requirement.\n";
-
-                        std::cout << "====================================\n";
-                    }
-                }
-
-                std::cout << "\n====================================\n";
-                std::cout << "          MODULE UNLOCKED!\n";
-                std::cout << "====================================\n";
-
-                std::cout << selectedModule->GetTitle()
-                    << " is now available.\n";
-
-                std::cout << "Available XP: "
-                    << researcher.GetAvailableXP()
-                    << std::endl;
-
-                Pause();
-            }
-
-            continue;
-        }
-
-        // ====================================
-        // Already Completed Module
-        // ====================================
-
-        if (selectedModule->IsCompleted())
-        {
-            selectedModule->DisplayModule();
-
-            std::cout
-                << "\nThis module has already been completed.\n";
-
             Pause();
-            continue;
-        }
-
-        // ====================================
-        // Module Training
-        // ====================================
-
-        selectedModule->DisplayModule();
-
-        std::cout << "\n====================================\n";
-        std::cout << "           MODULE TRAINING\n";
-        std::cout << "====================================\n";
-
-        // Level 0 requires two challenges.
-        if (moduleIndex == 0)
-        {
-            std::cout
-                << "Complete both challenges from Start Training:\n\n";
-
-            std::cout << "1. Authorization Basics: ";
-
-            if (challenges[0].IsCompleted())
-            {
-                std::cout << "Completed\n";
-            }
-            else
-            {
-                std::cout << "Not Completed\n";
-            }
-
-            std::cout << "2. Scope Basics: ";
-
-            if (challenges[1].IsCompleted())
-            {
-                std::cout << "Completed\n";
-            }
-            else
-            {
-                std::cout << "Not Completed\n";
-            }
-
-            std::cout
-                << "\nCompleting both challenges will automatically "
-                << "complete this learning module.\n";
-
-            std::cout
-                << "You will also earn the module XP bonus.\n";
-        }
-        else if (moduleIndex == 1)
-        {
-            std::cout
-                << "Required Hands-On Lab:\n\n";
-
-            std::cout << "1. Terminal Investigation: ";
-
-            if (labs[0].IsCompleted())
-            {
-                std::cout << "Completed\n";
-            }
-            else
-            {
-                std::cout << "Not Completed\n";
-            }
-
-            std::cout
-                << "\nComplete Terminal Investigation from "
-                << "Hands-On Labs to automatically complete "
-                << "Computer Fundamentals.\n";
-
-            std::cout
-                << "You will also earn the module XP bonus.\n";
-        }
-        else if (moduleIndex == 2)
-        {
-            // Linux Fundamentals: shuffled answer letters on every attempt.
-            struct LinuxQuestion
-            {
-                std::string prompt;
-                std::array<std::string, 3> options;
-                int correctIndex;
-            };
-            const std::array<LinuxQuestion, 3> questions = { {
-                {"Which command lists files?", {"pwd", "ls", "cd"}, 1},
-                {"Which command displays your current directory?", {"pwd", "cat", "mkdir"}, 0},
-                {"Which command changes file permissions?", {"ls", "cd", "chmod"}, 2}
-            } };
-
-            std::cout << "\nLINUX FUNDAMENTALS\n\n"
-                << "pwd   - Display the current directory.\n"
-                << "ls    - List files and directories.\n"
-                << "cd    - Change directories.\n"
-                << "cat   - Display file contents.\n"
-                << "mkdir - Create a directory.\n"
-                << "chmod - Change file permissions.\n"
-                << "\nKNOWLEDGE ASSESSMENT\n"
-                << "Answer all three questions correctly to pass.\n";
-
-            int correctAnswers = 0;
-            for (int i = 0; i < static_cast<int>(questions.size()); ++i)
-            {
-                const auto& question = questions[i];
-                std::vector<int> order = ShuffleAnswerPositions(
-                    "Linux Fundamentals Q" + std::to_string(i),
-                    3, question.correctIndex);
-                std::cout << "\n" << i + 1 << ". " << question.prompt << "\n\n";
-                for (int j = 0; j < 3; ++j)
-                {
-                    std::cout << "   " << static_cast<char>('a' + j)
-                        << ". " << question.options[order[j]] << "\n";
-                }
-                std::cout << "\n";
-                int selectedPosition = ReadLetterAnswer(3);
-                if (order[selectedPosition] == question.correctIndex)
-                {
-                    ++correctAnswers;
-                }
-            }
-
-            std::cout << "\nAssessment Score: " << correctAnswers << "/3\n";
-            if (correctAnswers == 3 && !selectedModule->IsCompleted())
-            {
-                selectedModule->CompleteModule();
-                if (selectedModule->IsCompleted())
-                {
-                    researcher.AddXP(selectedModule->GetXPReward());
-                    std::cout << "\n[MODULE COMPLETE] Linux Fundamentals!\n"
-                        << "XP Earned: " << selectedModule->GetXPReward()
-                        << "\nNetworking Fundamentals can now be unlocked "
-                        << "when its requirements are met.\n";
-                }
-            }
-            else if (correctAnswers != 3)
-            {
-                std::cout << "Assessment not passed. Review the lesson and try again.\n";
-            }
-        }
-        else
-        {
-            const ModuleLesson* lesson = FindModuleLesson(moduleIndex);
-            if (lesson == nullptr)
-            {
-                std::cout << "No training activity is assigned to this module.\n";
-            }
-            else if (RunModuleLesson(*lesson) && !selectedModule->IsCompleted())
-            {
-                selectedModule->CompleteModule();
-                if (selectedModule->IsCompleted())
-                {
-                    researcher.AddXP(selectedModule->GetXPReward());
-                    std::cout << "\n[MODULE COMPLETE] "
-                        << selectedModule->GetTitle() << "!\n";
-                    std::cout << "XP Earned: " << selectedModule->GetXPReward() << '\n';
-
-                    if (moduleIndex + 1 < static_cast<int>(learningModules.size()))
-                    {
-                        std::cout << learningModules[moduleIndex + 1].GetTitle()
-                            << " can now be unlocked when its requirements are met.\n";
-                    }
-                    else
-                    {
-                        std::cout << "You completed the current learning path!\n";
-                    }
-                }
-            }
-        }
-        Pause();
-    }
+        },
+        ShuffleAnswerPositions,
+        ReadLetterAnswer);
 }
-// ====================================
-// Display Hands-On Labs
-// ====================================
 
 void TrainerApp::DisplayLabs() const
 {
@@ -1839,6 +1239,100 @@ void TrainerApp::StartTraining()
         std::cout << "No XP was lost.\n";
     }
 }
+// ====================================
+// Docker SQL Injection Training Menu
+// ====================================
+
+void TrainerApp::OpenDockerLabs()
+{
+    bool inMenu = true;
+
+    while (inMenu)
+    {
+        std::cout << "\n====================================\n";
+        std::cout << "       DOCKER TRAINING LAB\n";
+        std::cout << "====================================\n";
+
+        const bool connected = DockerLabClient::IsConnected();
+
+        std::cout << "Connection: "
+            << (connected ? "ONLINE" : "OFFLINE") << '\n';
+
+        std::cout << "Server: 127.0.0.1:8086\n";
+
+        std::cout << "====================================\n";
+        std::cout << "1. Check Docker Connection\n";
+        std::cout << "2. View SQL Injection Challenges\n";
+        std::cout << "3. View Docker Lab Status\n";
+        std::cout << "0. Return to Main Menu\n";
+        std::cout << "====================================\n";
+        std::cout << "Choice: ";
+
+        const int choice = GetValidatedChoice(0, 3);
+
+        switch (choice)
+        {
+        case 1:
+        {
+            if (DockerLabClient::IsConnected())
+            {
+                std::cout << "\nDocker connection successful!\n";
+            }
+            else
+            {
+                std::cout << "\nDocker connection failed.\n";
+                std::cout << "Make sure the C++ container is running.\n";
+            }
+
+            Pause();
+            break;
+        }
+
+        case 2:
+        {
+            std::string response;
+
+            if (DockerLabClient::GetChallenges(response))
+            {
+                std::cout << "\nAvailable Docker Challenges:\n";
+                std::cout << response << '\n';
+            }
+            else
+            {
+                std::cout << "\nUnable to retrieve challenges.\n";
+            }
+
+            Pause();
+            break;
+        }
+
+        case 3:
+        {
+            std::string response;
+
+            if (DockerLabClient::GetStatus(response))
+            {
+                std::cout << "\nDocker Lab Status:\n";
+                std::cout << response << '\n';
+            }
+            else
+            {
+                std::cout << "\nUnable to retrieve Docker status.\n";
+            }
+
+            Pause();
+            break;
+        }
+
+        case 0:
+            inMenu = false;
+            break;
+
+        default:
+            break;
+        }
+    }
+}
 
 // ====================================
 // Main Menu Choice Handling
@@ -1888,6 +1382,67 @@ void TrainerApp::HandleChoice(int choice)
 
         break;
     }
+    case 11:
+    {
+        sqlInjection.Run();
+
+        if (sqlInjection.IsAssessmentComplete() &&
+            !sqlInjection.IsRewardClaimed())
+        {
+            researcher.AddXP(200);
+            sqlInjection.MarkRewardClaimed();
+
+            std::cout
+                << "\nSQL Injection Stage 2 completion reward: 200 XP!\n";
+
+            std::cout
+                << "Save your progress to keep this reward.\n";
+        }
+
+        break;
+    }
+    case 12:
+    {
+        OpenDockerLabs();
+        break;
+    }
+    case 13:
+    {
+        // Record completion before this academy visit so XP is awarded
+        // only for modules newly completed during this session.
+        const std::vector<SQLLesson>& lessons = sqlAcademy.GetLessons();
+        std::vector<bool> previouslyCompleted;
+        previouslyCompleted.reserve(lessons.size());
+        for (const SQLLesson& lesson : lessons)
+        {
+            previouslyCompleted.push_back(lesson.completed);
+        }
+
+        sqlAcademy.Run();
+
+        const std::vector<SQLLesson>& updatedLessons = sqlAcademy.GetLessons();
+        for (std::size_t i = 0; i < updatedLessons.size(); ++i)
+        {
+            if (!previouslyCompleted[i] && updatedLessons[i].completed)
+            {
+                researcher.AddXP(updatedLessons[i].xpReward);
+                std::cout << "\nSQL Academy: " << updatedLessons[i].title
+                    << " completed! Earned " << updatedLessons[i].xpReward
+                    << " XP.\n";
+                std::cout << "Save your progress to keep this reward.\n";
+            }
+        }
+        break;
+    }
+    case 14:
+        DisplayResearcherStatistics();
+        break;
+    case 15:
+        DisplayToolInventory();
+        break;
+    case 16:
+        OpenToolShop();
+        break;
     case 9:
         running = false;
         std::cout << "\nThank you for using BugBountyTrainer!\n";
@@ -1935,7 +1490,7 @@ void TrainerApp::OpenOptions()
 bool TrainerApp::SelectSavedUser()
 {
 
-    const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(true);
+    const std::vector<std::filesystem::path> saveFiles = SavedUserManager::FindSaveFiles(true);
 
     if (saveFiles.empty())
     {
@@ -1947,7 +1502,7 @@ bool TrainerApp::SelectSavedUser()
     std::cout << "\nAvailable saved users:\n";
     for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
     {
-        std::cout << i + 1 << ". " << SavedUserLabel(saveFiles[i]) << '\n';
+        std::cout << i + 1 << ". " << SavedUserManager::SavedUserLabel(saveFiles[i]) << '\n';
     }
 
     std::cout << "0. Return to startup menu\n";
@@ -1963,10 +1518,12 @@ bool TrainerApp::SelectSavedUser()
         challenges,
         learningModules,
         sqlFundamentals,
+        sqlInjection,
+        sqlAcademy,
         saveFiles[choice - 1].string()))
     {
         std::cout << "\nUnable to load that save file.\n";
-        Pause();
+
         return false;
     }
 
@@ -1977,7 +1534,7 @@ bool TrainerApp::SelectSavedUser()
 
 void TrainerApp::DeleteSavedUser()
 {
-    const std::vector<std::filesystem::path> saveFiles = FindSaveFiles(false);
+    const std::vector<std::filesystem::path> saveFiles = SavedUserManager::FindSaveFiles(false);
 
     if (saveFiles.empty())
     {
@@ -1989,7 +1546,7 @@ void TrainerApp::DeleteSavedUser()
     std::cout << "\nSaved-user files available to delete:\n";
     for (int i = 0; i < static_cast<int>(saveFiles.size()); ++i)
     {
-        std::cout << i + 1 << ". " << SavedUserLabel(saveFiles[i])
+        std::cout << i + 1 << ". " << SavedUserManager::SavedUserLabel(saveFiles[i])
             << " (" << saveFiles[i].filename().string() << ")\n";
     }
 
@@ -2003,7 +1560,7 @@ void TrainerApp::DeleteSavedUser()
     }
 
     const std::filesystem::path selectedFile = saveFiles[choice - 1];
-    std::cout << "\nDelete " << SavedUserLabel(selectedFile) << "?\n";
+    std::cout << "\nDelete " << SavedUserManager::SavedUserLabel(selectedFile) << "?\n";
     std::cout << "File: " << selectedFile.filename().string() << '\n';
     std::cout << "This permanently removes this save file.\n";
     std::cout << "1. Delete\n2. Cancel\nChoice: ";
@@ -2094,6 +1651,28 @@ bool TrainerApp::StartSession()
     return false;
 }
 
+// ====================================
+// Menu Pause Handling
+// ====================================
+
+// Returns true when a menu option manages
+// its own pause or navigation flow.
+static bool HandlesOwnPause(int choice)
+{
+    switch (choice)
+    {
+    case 2:  // Learning Path
+    case 3:  // Hands-On Labs
+    case 6:  // Vulnerability Categories
+    case 10: // SQL Fundamentals
+    case 13: // SQL Academy
+    case 16: // Tool Shop (handles its own purchase prompts)
+        return true;
+
+    default:
+        return false;
+    }
+}
 
 void TrainerApp::Run()
 {
@@ -2107,11 +1686,12 @@ void TrainerApp::Run()
         while (running)
         {
             DisplayMenu();
-            int choice = GetValidatedChoice(1, 10);
+            int choice = GetValidatedChoice(1, 16);
             HandleChoice(choice);
 
-            // These screens handle their own pauses.
-            if (running && choice != 2 && choice != 3 && choice != 6 && choice != 10)
+            // Pause only when the selected screen
+        // does not manage its own pause.
+            if (running && !HandlesOwnPause(choice))
             {
                 Pause();
             }
@@ -2226,7 +1806,7 @@ void TrainerApp::BrowseCategories()
 
 void TrainerApp::SaveProgress()
 {
-    const std::string filename = SaveFilenameFor(researcher.GetName());
+    const std::string filename = SavedUserManager::SaveFilenameFor(researcher.GetName());
 
     std::cout << "\n====================================\n";
     std::cout << "          SAVE PROGRESS\n";
@@ -2238,6 +1818,8 @@ void TrainerApp::SaveProgress()
         challenges,
         learningModules,
         sqlFundamentals,
+        sqlInjection,
+        sqlAcademy,
         filename))
     {
         std::cout << "\nProgress saved successfully!\n";
@@ -2254,7 +1836,7 @@ void TrainerApp::SaveProgress()
 
 void TrainerApp::LoadProgress()
 {
-    const std::string filename = SaveFilenameFor(researcher.GetName());
+    const std::string filename = SavedUserManager::SaveFilenameFor(researcher.GetName());
 
     std::cout << "\n====================================\n";
     std::cout << "          LOAD PROGRESS\n";
@@ -2266,6 +1848,8 @@ void TrainerApp::LoadProgress()
         challenges,
         learningModules,
         sqlFundamentals,
+        sqlInjection,
+        sqlAcademy,
         filename))
     {
         std::cout << "\nProgress restored successfully!\n";

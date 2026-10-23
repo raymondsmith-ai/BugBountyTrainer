@@ -7,33 +7,63 @@
 #include "Challenge.h"
 #include "LearningModule.h"
 #include "SQLFundamentals.h"
+#include "SQLInjection.h"
+#include "SQLAcademy.h"
 
 // ====================================
 // SaveManager Class
 // ====================================
-// Handles saving and loading researcher,
-// challenge, and learning module progress.
+// Handles persistent researcher progress,
+// completed challenges, learning modules,
+// SQL Fundamentals, and SQL Injection.
+//
+// Supports BBT_SAVE_V2 through BBT_SAVE_V6.
 // ====================================
 
 class SaveManager
 {
 public:
 
-    // Save researcher information,
-    // completed challenges, and modules.
+    // ====================================
+    // Save Progress
+    // ====================================
+    // Saves researcher information,
+    // challenge completion,
+    // learning module progression,
+    // SQL Fundamentals progress,
+    // SQL Injection Stage 2 progress,
+    // SQL Academy completion,
+    // and one-time reward tracking.
+    // ====================================
+
     static bool SaveProgress(
         const Researcher& researcher,
         const std::vector<Challenge>& challenges,
         const std::vector<LearningModule>& learningModules,
         const SQLFundamentals& sqlFundamentals,
+        const SQLInjection& sqlInjection,
+        const SQLAcademy& sqlAcademy,
         const std::string& filename);
 
-    // Restore researcher information,
-    // completed challenges, and modules.
+    // ====================================
+    // Load Progress
+    // ====================================
+    // Loads existing researcher information,
+    // challenge completion,
+    // learning module progression,
+    // SQL Fundamentals progress,
+    // SQL Injection Stage 2 progress,
+    // and reward completion flags.
+    //
+    // Supports older V2, V3, and V4 saves.
+    // ====================================
+
     static bool LoadProgress(
         Researcher& researcher,
         std::vector<Challenge>& challenges,
         std::vector<LearningModule>& learningModules,
         SQLFundamentals& sqlFundamentals,
+        SQLInjection& sqlInjection,
+        SQLAcademy& sqlAcademy,
         const std::string& filename);
 };

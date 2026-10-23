@@ -36,6 +36,20 @@ The application allows users to create a researcher profile, complete cybersecur
 * Main menu navigation
 * Input validation and improved error feedback
 * Multiple C++ classes using separate header and source files
+* SQL Fundamentals lessons, guided practice, and assessment
+* SQL Injection Stage 2 training
+* SQL Academy with 13 progressive learning modules
+* SQL Academy assessments and completion tracking
+* One-time XP rewards for completed SQL training
+* Docker-based SQL Injection training labs
+* SaveManager V6 persistent save/load system
+* Researcher progress restoration
+* SQL Academy completion persistence
+* Corrupted save-file validation
+* Saved-user profile selection
+* Automated regression testing
+* 52 successful regression checks with zero failures
+* Improved main menu pause handling
 
 ## Current Progress
 
@@ -79,30 +93,53 @@ Completed:
 
 ## Planned Development
 
-### Week 3 / Milestone 3
+## Week 3 / Milestone 3
 
-* Expand hands-on training activities
-* Add additional simulated labs
-* Continue improving researcher progression
-* Add tools and inventory features
-* Add additional researcher statistics
+Completed:
 
-### Week 4 / Milestone 4
+* Implemented SQL Fundamentals training
+* Added guided SQL practice and assessments
+* Developed SQL Injection Stage 2 training
+* Expanded Docker-based training labs
+* Introduced SQL Academy with 13 modules
+* Integrated training completion with XP progression
+* Improved save/load functionality
+* Added additional progress tracking
+* Continued application testing and debugging
 
-* Add save and load functionality
-* Complete application testing and bug fixes
-* Final documentation
-* Final project cleanup
+## Week 4 / Milestone 4
 
+Completed:
+
+* Updated SaveManager to V6
+* Integrated SQL Academy completion persistence
+* Improved corrupted save-file detection
+* Improved saved-user filename validation
+* Resolved duplicate saved-user entries caused by backup files
+* Refactored main menu pause handling
+* Updated regression tests for the current SaveManager interface
+* Successfully completed 52 regression checks with zero failures
+* Tested researcher profile loading and menu navigation
+* Updated final project documentation
+* Prepared final project submission materials
+
+## Future Development
+
+* Continue refactoring TrainerApp into smaller components
+* Expand automated regression testing
+* Develop additional interactive cybersecurity labs
+* Improve Docker-based training environments
+* Explore Windows desktop and web application versions
+* Research AI-assisted cybersecurity tutoring
 ## Technologies
 
-* C++
 * C++20
-* Visual Studio
+* Microsoft Visual Studio
 * Git
 * GitHub
 * GitHub Projects
-
+* PowerShell
+* Docker
 ## Development Workflow
 
 Development work is completed on the `dev` branch and merged into `main` through Pull Requests.
@@ -170,6 +207,73 @@ Previous feedback encouraged better input validation, progression, and code orga
 
 ### Next Steps
 For Week 4, I'll focus on testing, refactoring, and preparing the final milestone while planning future cybersecurity labs.
+
+## Final Project Stand-Up — Week 4 / Milestone 4
+
+### Project Overview
+
+Throughout Project & Portfolio I, I developed BugBountyTrainer from a basic C++ console application into a more comprehensive cybersecurity training program.
+
+The application introduces users to ethical hacking and bug bounty concepts through interactive challenges, structured learning modules, simulated hands-on labs, and SQL training exercises.
+
+Users can create researcher profiles, earn XP, increase their levels, unlock learning modules, complete training activities, and save their progress.
+
+### Accomplishments
+
+One of my biggest accomplishments was successfully integrating multiple systems into one working application.
+
+During the course, I implemented researcher progression, training challenges, vulnerability categories, a progressive learning path, and hands-on labs.
+
+I also expanded the application with SQL Fundamentals, SQL Injection training, and SQL Academy, which contains 13 learning modules.
+
+Another major accomplishment was implementing the V6 save/load system. This allows the application to preserve researcher progress, training completion, and SQL Academy results between sessions.
+
+During Week 4, I improved error handling, corrected saved-user discovery issues, and refactored menu navigation to improve maintainability.
+
+I also updated the automated regression tests after receiving instructor feedback. The final test run successfully completed 52 checks with zero failures.
+
+### Challenges and Problem-Solving
+
+One challenge was managing the growing complexity of TrainerApp.cpp as new features were introduced.
+
+I began addressing this by separating menu pause-handling logic into a dedicated helper function.
+
+Another challenge involved maintaining compatibility between SaveManager and the automated regression tests. As the save system expanded, the older tests no longer matched the updated function signatures.
+
+I corrected the test configuration, updated the SaveManager calls, resolved compilation errors, and successfully executed the regression tests.
+
+I also encountered problems involving save-file validation and duplicate saved-user entries. These issues taught me the importance of validating persistent data and organizing backup files properly.
+
+### Lessons Learned
+
+This project strengthened my understanding of object-oriented programming, C++ class design, debugging, file management, and software testing.
+
+I also gained valuable experience using Git and GitHub for version control, development planning, and tracking project progress.
+
+One important lesson was that software development involves more than implementing features. Reliable applications require testing, code maintenance, clear documentation, and continuous improvement.
+
+I learned to approach problems systematically, make smaller changes, and verify functionality before continuing development.
+
+### Future Development
+
+After completing this course, I plan to continue improving BugBountyTrainer.
+
+My future goals include refactoring larger components into smaller classes, expanding interactive cybersecurity labs, improving automated testing, and developing more advanced training content.
+
+Eventually, I would like to explore transforming BugBountyTrainer into a Windows desktop application and web-based cybersecurity training platform.
+
+I am also interested in incorporating AI-assisted tutoring to provide personalized explanations and educational guidance.
+
+### Final Reflection
+
+BugBountyTrainer has been one of my most significant programming projects so far.
+
+I started this course with an idea and gradually transformed it into a functional C++ application with multiple interconnected systems.
+
+Throughout the development process, I improved my programming skills, gained confidence in debugging, and developed a better understanding of professional software development workflows.
+
+I am proud of the progress I made and plan to continue developing the project beyond this course.
+
 
 ## Author
 
